@@ -30,6 +30,7 @@ def example_low_risk_patient():
     print("- Não usa anti-hipertensivos")
     print("- Não diabética")
     print("- Não fumante")
+    print("- eTFG: 95 mL/min/1.73m²")
     
     result = calculator.calculate_risk_score(
         age=45,
@@ -40,7 +41,8 @@ def example_low_risk_patient():
         sbp=110,
         on_bp_meds=False,
         diabetes=False,
-        smoker=False
+        smoker=False,
+        egfr=95
     )
     
     print("\nResultados:")
@@ -71,6 +73,7 @@ def example_high_risk_patient():
     print("- Em uso de anti-hipertensivos")
     print("- Diabético")
     print("- Fumante")
+    print("- eTFG: 50 mL/min/1.73m²")
     
     result = calculator.calculate_risk_score(
         age=70,
@@ -81,7 +84,8 @@ def example_high_risk_patient():
         sbp=160,
         on_bp_meds=True,
         diabetes=True,
-        smoker=True
+        smoker=True,
+        egfr=50
     )
     
     print("\nResultados:")
@@ -112,6 +116,7 @@ def example_intermediate_risk_patient():
     print("- Não usa anti-hipertensivos")
     print("- Diabético")
     print("- Não fumante")
+    print("- eTFG: 75 mL/min/1.73m²")
     
     result = calculator.calculate_risk_score(
         age=55,
@@ -122,7 +127,8 @@ def example_intermediate_risk_patient():
         sbp=140,
         on_bp_meds=False,
         diabetes=True,
-        smoker=False
+        smoker=False,
+        egfr=75
     )
     
     print("\nResultados:")
@@ -139,7 +145,7 @@ def example_intermediate_risk_patient():
 def example_with_kidney_disease():
     """Example: Patient with reduced kidney function"""
     print("\n" + "="*60)
-    print("Exemplo 4: Paciente com Função Renal Reduzida")
+    print("Exemplo 4: Paciente com Função Renal Reduzida e RACu elevada")
     print("="*60)
     
     calculator = PREVENTCalculator()
@@ -153,7 +159,9 @@ def example_with_kidney_disease():
     print("- Em uso de anti-hipertensivos")
     print("- Não diabético")
     print("- Não fumante")
-    print("- eGFR: 45 mL/min/1.73m²")
+    print("- eTFG: 45 mL/min/1.73m²")
+    print("- RACu: 150 mg/g (albuminúria)")
+    print("- HbA1c: 6.0%")
     
     result = calculator.calculate_risk_score(
         age=62,
@@ -165,7 +173,9 @@ def example_with_kidney_disease():
         on_bp_meds=True,
         diabetes=False,
         smoker=False,
-        egfr=45
+        egfr=45,
+        uacr=150,
+        hba1c=6.0
     )
     
     print("\nResultados:")
@@ -178,7 +188,7 @@ def example_with_kidney_disease():
     for i, rec in enumerate(recommendations, 1):
         print(f"{i}. {rec}")
     
-    print("\nNota: A função renal reduzida aumenta o risco cardiovascular.")
+    print("\nNota: A função renal reduzida e albuminúria aumentam o risco cardiovascular.")
 
 
 def main():
