@@ -1,6 +1,15 @@
 """
 PREVENT Calculator - AHA Cardiovascular Disease Risk Calculator
 Based on the American Heart Association's PREVENT equations
+
+NOTE: This implementation uses simplified coefficients for demonstration purposes.
+For clinical use, coefficients should be validated against the official AHA PREVENT
+equations published in Circulation (2023). The actual PREVENT equations include
+race-specific and more refined coefficients.
+
+Reference: Khan SS, et al. Novel Prediction Equations for Absolute Risk Assessment 
+of Total Cardiovascular Disease Incorporating Cardiovascular-Kidney-Metabolic Health. 
+Circulation. 2023.
 """
 import numpy as np
 
@@ -25,7 +34,7 @@ class PREVENTCalculator:
         Parameters:
         - age: Age in years (40-79)
         - sex: 'M' for Male, 'F' for Female
-        - race: 'white', 'black', 'hispanic', 'asian', 'other'
+        - race: 'white', 'black', 'hispanic', 'asian', 'other' (for future use with race-specific coefficients)
         - total_cholesterol: Total cholesterol in mg/dL
         - hdl_cholesterol: HDL cholesterol in mg/dL
         - sbp: Systolic blood pressure in mmHg
@@ -36,6 +45,10 @@ class PREVENTCalculator:
         
         Returns:
         - Dictionary with 10-year and 30-year risk percentages
+        
+        Note: Race parameter is included for interface compatibility and future 
+        implementation of race-specific coefficients as per AHA PREVENT equations.
+        Current implementation uses sex-specific coefficients only.
         """
         
         # Input validation
@@ -51,11 +64,13 @@ class PREVENTCalculator:
         ln_hdl = np.log(hdl_cholesterol)
         ln_sbp = np.log(sbp)
         
-        # Coefficients (simplified version - these should be adjusted based on sex and race)
-        # These are example coefficients and should be replaced with actual PREVENT equation coefficients
+        # Coefficients based on Framingham-like equations adapted for PREVENT
+        # NOTE: These are simplified coefficients for demonstration. In production,
+        # use the official AHA PREVENT equation coefficients from the published paper.
+        # Official coefficients vary by sex, race/ethnicity, and are continuously updated.
         
         if sex == 'M':
-            # Male coefficients (example values)
+            # Male coefficients (simplified example values)
             coef_ln_age = 3.06
             coef_ln_total_chol = 1.12
             coef_ln_hdl = -0.93
@@ -64,7 +79,7 @@ class PREVENTCalculator:
             coef_smoker = 0.65 if smoker else 0
             coef_diabetes = 0.57 if diabetes else 0
         else:
-            # Female coefficients (example values)
+            # Female coefficients (simplified example values)
             coef_ln_age = 2.32
             coef_ln_total_chol = 1.20
             coef_ln_hdl = -0.70

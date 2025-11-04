@@ -114,7 +114,9 @@ if calculator_choice == "PREVENT - Risco Cardiovascular (AHA)":
     <div class="info-box">
     <strong>PREVENT (Predicting Risk of cardiovascular disease EVENTs)</strong><br>
     Calculadora da American Heart Association para estimativa de risco cardiovascular em 10 e 30 anos.
-    Útil para decisões sobre prevenção primária de doenças cardiovasculares.
+    Útil para decisões sobre prevenção primária de doenças cardiovasculares.<br><br>
+    <em style="font-size: 0.9em;">⚠️ Nota: Esta implementação usa coeficientes simplificados para demonstração. 
+    Para uso clínico, os coeficientes devem ser validados com as equações oficiais AHA PREVENT publicadas.</em>
     </div>
     """, unsafe_allow_html=True)
     
