@@ -264,7 +264,9 @@ with tabs[2]:
     st.markdown("""
     <div class="info-box">
     <strong>PREVENT (Predicting Risk of cardiovascular disease EVENTs)</strong><br>
-    Calculadora da American Heart Association para estimativa de risco cardiovascular em 10 e 30 anos.
+    Calculadora oficial da American Heart Association para estimativa de risco cardiovascular.<br>
+    Fornece três avaliações de risco: DCV Total, DCVA (Aterosclerose) e Insuficiência Cardíaca.<br><br>
+    <em>Implementação fidedigna às equações oficiais AHA PREVENT (Circulation 2023).</em>
     </div>
     """, unsafe_allow_html=True)
     
@@ -292,14 +294,7 @@ with tabs[2]:
                     hba1c=pd.get('hba1c') if pd.get('hba1c', 0) > 0 else None
                 )
                 
-                col1, col2, col3 = st.columns(3)
-                with col1:
-                    st.metric("Risco em 10 anos", f"{results['10_year_risk']}%")
-                with col2:
-                    st.metric("Risco em 30 anos", f"{results['30_year_risk']}%")
-                with col3:
-                    st.metric("Categoria", results['risk_category'])
-                
+                # Display overall risk category
                 risk_class_map = {
                     'Baixo': 'risk-low',
                     'Limítrofe': 'risk-borderline',
@@ -308,17 +303,75 @@ with tabs[2]:
                 }
                 st.markdown(f"""
                     <div class="risk-box {risk_class_map[results['risk_category']]}">
-                        Categoria de Risco: {results['risk_category'].upper()}
+                        Categoria de Risco Geral: {results['risk_category'].upper()}
                     </div>
                 """, unsafe_allow_html=True)
                 
+                st.markdown("---")
+                
+                # Section 1: Total CVD (Risco Geral)
+                st.subheader("📊 Doença Cardiovascular Total (DCV)")
+                st.markdown("*Risco de qualquer evento cardiovascular (infarto, AVC, insuficiência cardíaca, etc.)*")
+                col1, col2 = st.columns(2)
+                with col1:
+                    st.metric("Risco em 10 anos", f"{results['total_cvd_10yr']}%")
+                with col2:
+                    st.metric("Risco em 30 anos", f"{results['total_cvd_30yr']}%")
+                
+                st.markdown("---")
+                
+                # Section 2: ASCVD (Aterosclerose)
+                st.subheader("🩺 Doença Cardiovascular Aterosclerótica (DCVA)")
+                st.markdown("*Risco de infarto do miocárdio ou AVC isquêmico*")
+                col1, col2 = st.columns(2)
+                with col1:
+                    st.metric("Risco em 10 anos", f"{results['ascvd_10yr']}%")
+                with col2:
+                    st.metric("Risco em 30 anos", f"{results['ascvd_30yr']}%")
+                
+                st.markdown("---")
+                
+                # Section 3: Heart Failure
+                st.subheader("💔 Insuficiência Cardíaca")
+                st.markdown("*Risco de desenvolver insuficiência cardíaca congestiva*")
+                col1, col2 = st.columns(2)
+                with col1:
+                    st.metric("Risco em 10 anos", f"{results['hf_10yr']}%")
+                with col2:
+                    st.metric("Risco em 30 anos", f"{results['hf_30yr']}%")
+                
+                st.markdown("---")
+                
+                # Clinical recommendations
                 st.subheader("💊 Recomendações Clínicas")
                 recommendations = calculator.get_recommendations(
                     results['risk_category'], 
-                    results['10_year_risk']
+                    results['total_cvd_10yr']
                 )
                 for i, rec in enumerate(recommendations, 1):
                     st.markdown(f"**{i}.** {rec}")
+                
+                # Additional information about risk types
+                st.markdown("---")
+                st.info("""
+                **Interpretação dos Resultados:**
+                
+                **DCV Total (Doença Cardiovascular Total):**
+                - Inclui todos os eventos cardiovasculares: infarto, AVC, insuficiência cardíaca, morte cardiovascular
+                - É o risco mais abrangente e útil para decisões sobre prevenção primária
+                
+                **DCVA (Doença Cardiovascular Aterosclerótica):**
+                - Eventos causados por aterosclerose: infarto do miocárdio e AVC isquêmico
+                - Importante para decisões sobre terapia antiplaquetária e estatinas
+                
+                **Insuficiência Cardíaca:**
+                - Risco específico de desenvolver ICC
+                - Útil para identificar pacientes que podem se beneficiar de controle mais rigoroso da PA e uso de IECA/BRA
+                
+                **Nota:** Estas estimativas são baseadas nas equações oficiais PREVENT da AHA (Circulation 2023),
+                que incorporam função renal (eTFG) e marcadores metabólicos (uACR, HbA1c) para uma avaliação
+                mais precisa do risco cardiovascular.
+                """)
                     
             except Exception as e:
                 st.error(f"Erro ao calcular: {str(e)}")

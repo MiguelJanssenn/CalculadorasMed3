@@ -87,7 +87,7 @@ class TestPREVENTCalculator(unittest.TestCase):
         """Test age validation"""
         with self.assertRaises(ValueError):
             self.calculator.calculate_risk_score(
-                age=35,  # Too young
+                age=25,  # Too young (PREVENT requires 30+)
                 sex='M',
                 race='white',
                 total_cholesterol=200,
