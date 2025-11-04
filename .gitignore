@@ -34,7 +34,8 @@ ENV/
 .DS_Store
 
 # Streamlit
-.streamlit/
+.streamlit/secrets.toml
+.streamlit/credentials.toml
 
 # Testing
 .pytest_cache/
