@@ -27,7 +27,7 @@ class PREVENTCalculator:
         self.baseline_survival_30yr = 0.8523  # Example baseline - adjust based on specific model
     
     def calculate_risk_score(self, age, sex, race, total_cholesterol, hdl_cholesterol, 
-                            sbp, on_bp_meds, diabetes, smoker, egfr=None):
+                            sbp, on_bp_meds, diabetes, smoker, egfr, uacr=None, hba1c=None):
         """
         Calculate cardiovascular disease risk score
         
@@ -41,7 +41,9 @@ class PREVENTCalculator:
         - on_bp_meds: Boolean - on blood pressure medication
         - diabetes: Boolean - has diabetes
         - smoker: Boolean - current smoker
-        - egfr: eGFR value (optional, for enhanced risk assessment)
+        - egfr: eGFR value (mL/min/1.73m²) - REQUIRED for PREVENT calculation
+        - uacr: Urine albumin-to-creatinine ratio (mg/g) - optional
+        - hba1c: HbA1c percentage (%) - optional
         
         Returns:
         - Dictionary with 10-year and 30-year risk percentages
@@ -57,6 +59,9 @@ class PREVENTCalculator:
         
         if sex not in ['M', 'F']:
             raise ValueError("Sex must be 'M' or 'F'")
+        
+        if egfr is None:
+            raise ValueError("eGFR is required for PREVENT calculation")
         
         # Calculate log-transformed values
         ln_age = np.log(age)
@@ -98,11 +103,20 @@ class PREVENTCalculator:
             coef_diabetes
         )
         
-        # Enhanced risk with eGFR if provided
-        if egfr is not None:
-            if egfr < 60:
-                # Add risk for reduced kidney function
-                sum_coefficients += 0.35
+        # Enhanced risk with eGFR (now mandatory)
+        if egfr < 60:
+            # Add risk for reduced kidney function
+            sum_coefficients += 0.35
+        
+        # Optional: Add risk adjustment for uACR if provided
+        if uacr is not None and uacr > 30:
+            # Add risk for albuminuria
+            sum_coefficients += 0.25
+        
+        # Optional: Add risk adjustment for HbA1c if provided
+        if hba1c is not None and hba1c > 6.5:
+            # Add risk for elevated HbA1c
+            sum_coefficients += 0.20
         
         # Calculate 10-year risk
         risk_10yr = 1 - np.power(self.baseline_survival_10yr, np.exp(sum_coefficients - 26.1))

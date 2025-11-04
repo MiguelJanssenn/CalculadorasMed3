@@ -36,7 +36,8 @@ class TestPREVENTCalculator(unittest.TestCase):
             sbp=120,
             on_bp_meds=False,
             diabetes=False,
-            smoker=False
+            smoker=False,
+            egfr=90
         )
         
         self.assertIn('10_year_risk', result)
@@ -56,7 +57,8 @@ class TestPREVENTCalculator(unittest.TestCase):
             sbp=160,
             on_bp_meds=True,
             diabetes=True,
-            smoker=True
+            smoker=True,
+            egfr=50
         )
         
         # High risk patients should have higher risk scores
@@ -74,7 +76,8 @@ class TestPREVENTCalculator(unittest.TestCase):
             sbp=110,
             on_bp_meds=False,
             diabetes=False,
-            smoker=False
+            smoker=False,
+            egfr=95
         )
         
         # Low risk patients should have lower risk scores
@@ -92,7 +95,8 @@ class TestPREVENTCalculator(unittest.TestCase):
                 sbp=120,
                 on_bp_meds=False,
                 diabetes=False,
-                smoker=False
+                smoker=False,
+                egfr=90
             )
         
         with self.assertRaises(ValueError):
@@ -105,7 +109,8 @@ class TestPREVENTCalculator(unittest.TestCase):
                 sbp=120,
                 on_bp_meds=False,
                 diabetes=False,
-                smoker=False
+                smoker=False,
+                egfr=90
             )
     
     def test_sex_validation(self):
@@ -120,7 +125,8 @@ class TestPREVENTCalculator(unittest.TestCase):
                 sbp=120,
                 on_bp_meds=False,
                 diabetes=False,
-                smoker=False
+                smoker=False,
+                egfr=90
             )
     
     def test_with_egfr(self):
@@ -140,6 +146,43 @@ class TestPREVENTCalculator(unittest.TestCase):
         
         self.assertIn('10_year_risk', result)
         # Risk should be calculated successfully with eGFR
+        self.assertGreaterEqual(result['10_year_risk'], 0)
+    
+    def test_egfr_required(self):
+        """Test that eGFR is required"""
+        with self.assertRaises(ValueError) as context:
+            self.calculator.calculate_risk_score(
+                age=55,
+                sex='M',
+                race='white',
+                total_cholesterol=200,
+                hdl_cholesterol=50,
+                sbp=120,
+                on_bp_meds=False,
+                diabetes=False,
+                smoker=False,
+                egfr=None  # Missing eGFR
+            )
+        self.assertIn("eGFR is required", str(context.exception))
+    
+    def test_with_optional_parameters(self):
+        """Test calculation with optional uACR and HbA1c"""
+        result = self.calculator.calculate_risk_score(
+            age=55,
+            sex='M',
+            race='white',
+            total_cholesterol=200,
+            hdl_cholesterol=50,
+            sbp=120,
+            on_bp_meds=False,
+            diabetes=False,
+            smoker=False,
+            egfr=90,
+            uacr=50,  # Optional: elevated albumin
+            hba1c=7.0  # Optional: elevated HbA1c
+        )
+        
+        self.assertIn('10_year_risk', result)
         self.assertGreaterEqual(result['10_year_risk'], 0)
     
     def test_risk_categorization(self):

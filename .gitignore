@@ -48,3 +48,7 @@ htmlcov/
 # Environment variables
 .env
 .env.local
+
+# Backup files
+*_old.py
+*.bak
