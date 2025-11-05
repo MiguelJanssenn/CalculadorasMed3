@@ -146,7 +146,7 @@ class PREVENTCalculator:
         }
     
     def _calculate_linear_predictor(self, coef, age, total_cholesterol, hdl_cholesterol,
-                                    sbp, on_bp_meds, diabetes, smoker, egfr, uacr):
+                                    sbp, on_bp_meds, diabetes, smoker, egfr, uacr, bmi):
         """
         Calculate the linear predictor (sum of coefficients × centered values)
         Values are centered at their population means for proper risk estimation
@@ -194,7 +194,7 @@ class PREVENTCalculator:
         return np.clip(risk_30yr, 0, 100)
     
     def calculate_risk_score(self, age, sex, race, total_cholesterol, hdl_cholesterol, 
-                            sbp, on_bp_meds, diabetes, smoker, egfr, uacr=None, hba1c=None):
+                             sbp, on_bp_meds, diabetes, smoker, egfr, bmi, on_statins, uacr=None, hba1c=None):
         """
         Calculate cardiovascular disease risk scores for all three outcomes
         
@@ -209,6 +209,8 @@ class PREVENTCalculator:
         - diabetes: Boolean - has diabetes
         - smoker: Boolean - current smoker
         - egfr: eGFR value (mL/min/1.73m²) - REQUIRED (15-140)
+        - bmi: Body Mass Index
+        - on_statins: Boolean - on statin medication
         - uacr: Urine albumin-to-creatinine ratio (mg/g) - optional (0-1000)
         - hba1c: HbA1c percentage (%) - optional (informational, may enhance diabetes assessment)
         
@@ -255,17 +257,17 @@ class PREVENTCalculator:
         # Calculate linear predictors for each outcome
         lp_cvd = self._calculate_linear_predictor(
             coef_cvd, age, total_cholesterol, hdl_cholesterol,
-            sbp, on_bp_meds, diabetes_enhanced, smoker, egfr, uacr
+            sbp, on_bp_meds, diabetes_enhanced, smoker, egfr, uacr, bmi
         )
         
         lp_ascvd = self._calculate_linear_predictor(
             coef_ascvd, age, total_cholesterol, hdl_cholesterol,
-            sbp, on_bp_meds, diabetes_enhanced, smoker, egfr, uacr
+            sbp, on_bp_meds, diabetes_enhanced, smoker, egfr, uacr, bmi
         )
         
         lp_hf = self._calculate_linear_predictor(
             coef_hf, age, total_cholesterol, hdl_cholesterol,
-            sbp, on_bp_meds, diabetes_enhanced, smoker, egfr, uacr
+            sbp, on_bp_meds, diabetes_enhanced, smoker, egfr, uacr, bmi
         )
         
         # Calculate 10-year risks
@@ -273,30 +275,38 @@ class PREVENTCalculator:
         ascvd_10yr = self._calculate_10year_risk(lp_ascvd, coef_ascvd['baseline_survival'])
         hf_10yr = self._calculate_10year_risk(lp_hf, coef_hf['baseline_survival'])
         
+        # Apply validation rules based on BMI and statin use, similar to the original implementation
+        if (bmi is None or bmi < 18.5 or bmi >= 40):
+            hf_10yr = np.nan
+
+        if (on_statins is None):
+            cvd_10yr = np.nan
+            ascvd_10yr = np.nan
+
         # Calculate 30-year risks
-        cvd_30yr = self._calculate_30year_risk(cvd_10yr)
-        ascvd_30yr = self._calculate_30year_risk(ascvd_10yr)
-        hf_30yr = self._calculate_30year_risk(hf_10yr)
+        cvd_30yr = self._calculate_30year_risk(cvd_10yr) if not np.isnan(cvd_10yr) else np.nan
+        ascvd_30yr = self._calculate_30year_risk(ascvd_10yr) if not np.isnan(ascvd_10yr) else np.nan
+        hf_30yr = self._calculate_30year_risk(hf_10yr) if not np.isnan(hf_10yr) else np.nan
         
         return {
             # Total CVD (overall cardiovascular disease)
-            'total_cvd_10yr': round(cvd_10yr, 2),
-            'total_cvd_30yr': round(cvd_30yr, 2),
+            'total_cvd_10yr': round(cvd_10yr, 2) if not np.isnan(cvd_10yr) else 'N/A',
+            'total_cvd_30yr': round(cvd_30yr, 2) if not np.isnan(cvd_30yr) else 'N/A',
             
             # ASCVD (atherosclerotic cardiovascular disease - MI, stroke)
-            'ascvd_10yr': round(ascvd_10yr, 2),
-            'ascvd_30yr': round(ascvd_30yr, 2),
+            'ascvd_10yr': round(ascvd_10yr, 2) if not np.isnan(ascvd_10yr) else 'N/A',
+            'ascvd_30yr': round(ascvd_30yr, 2) if not np.isnan(ascvd_30yr) else 'N/A',
             
             # Heart Failure
-            'hf_10yr': round(hf_10yr, 2),
-            'hf_30yr': round(hf_30yr, 2),
+            'hf_10yr': round(hf_10yr, 2) if not np.isnan(hf_10yr) else 'N/A',
+            'hf_30yr': round(hf_30yr, 2) if not np.isnan(hf_30yr) else 'N/A',
             
             # Overall risk category based on total CVD
-            'risk_category': self._categorize_risk(cvd_10yr),
+            'risk_category': self._categorize_risk(cvd_10yr) if not np.isnan(cvd_10yr) else 'Indisponível',
             
             # Legacy field for backwards compatibility
-            '10_year_risk': round(cvd_10yr, 2),
-            '30_year_risk': round(cvd_30yr, 2)
+            '10_year_risk': round(cvd_10yr, 2) if not np.isnan(cvd_10yr) else 'N/A',
+            '30_year_risk': round(cvd_30yr, 2) if not np.isnan(cvd_30yr) else 'N/A'
         }
     
     def _categorize_risk(self, risk_pct):
