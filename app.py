@@ -5,6 +5,13 @@ from calculators.gastro import FIB4Calculator, MELDCalculator, ChildPughCalculat
 from calculators.nephro import eGFRCalculator, KtVCalculator
 from calculators.endocrino import BMICalculator, HOMAIRCalculator, HOMABetaCalculator
 
+# Helper function to get optional PREVENT parameters
+def get_prevent_optional_params(patient_data):
+    """Get UACR and HbA1c values if checkboxes are checked and values are valid"""
+    uacr_value = patient_data.get('uacr') if patient_data.get('use_uacr', False) and patient_data.get('uacr', 0) > 0 else None
+    hba1c_value = patient_data.get('hba1c') if patient_data.get('use_hba1c', False) and patient_data.get('hba1c', 0) > 0 else None
+    return uacr_value, hba1c_value
+
 # Page configuration
 st.set_page_config(
     page_title="Calculadoras Médicas",
@@ -184,6 +191,19 @@ st.markdown("""
         font-weight: 600;
         margin-left: 0.5rem;
     }
+    
+    /* Fix metric font sizes to prevent overflow */
+    [data-testid="stMetricValue"] {
+        font-size: 1.5rem !important;
+    }
+    
+    [data-testid="stMetricLabel"] {
+        font-size: 0.875rem !important;
+    }
+    
+    [data-testid="stMetricDelta"] {
+        font-size: 0.75rem !important;
+    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -219,69 +239,76 @@ with tabs[0]:
     
     col1, col2, col3 = st.columns(3)
     
+    # Helper function to create optional numeric inputs
+    def optional_number_input(label, key, default_value="", help_text=None):
+        """Create a text input that accepts numbers or empty values"""
+        stored_value = st.session_state.patient_data.get(key, default_value)
+        if stored_value == "" or stored_value is None:
+            display_value = ""
+        else:
+            display_value = str(stored_value)
+        
+        value = st.text_input(label, value=display_value, help=help_text, key=f"input_{key}")
+        
+        if value == "":
+            return None
+        try:
+            # Try to convert to float
+            return float(value)
+        except ValueError:
+            st.error(f"'{label}' deve ser um número válido")
+            return None
+    
     with col1:
         st.subheader("Dados Demográficos")
-        # Note: Default values are set to minimum values (not realistic patient values)
-        # This ensures the form starts empty, requiring conscious input from the user.
-        # This addresses requirement #3: page should load without pre-filled data.
-        age = st.number_input("Idade (anos)", min_value=1, max_value=120, 
-                             value=st.session_state.patient_data.get('age', 1), step=1)
+        # Note: Campos agora podem ficar vazios
+        age = optional_number_input("Idade (anos)", "age", help_text="Deixe vazio se não disponível")
         sex = st.selectbox("Sexo", ["Masculino", "Feminino"],
                           index=0 if st.session_state.patient_data.get('sex') == 'Masculino' else 1)
-        weight = st.number_input("Peso (kg)", min_value=1.0, max_value=300.0,
-                                value=st.session_state.patient_data.get('weight', 1.0), step=0.1)
-        height = st.number_input("Altura (cm)", min_value=50.0, max_value=250.0,
-                                value=st.session_state.patient_data.get('height', 50.0), step=0.1)
+        weight = optional_number_input("Peso (kg)", "weight", help_text="Deixe vazio se não disponível")
+        height = optional_number_input("Altura (cm)", "height", help_text="Deixe vazio se não disponível")
         
         st.subheader("História Clínica")
         diabetes = st.checkbox("Diabetes", value=st.session_state.patient_data.get('diabetes', False))
         smoker = st.checkbox("Fumante atual", value=st.session_state.patient_data.get('smoker', False))
         on_bp_meds = st.checkbox("Uso de anti-hipertensivos", 
                                 value=st.session_state.patient_data.get('on_bp_meds', False))
+        on_statins = st.checkbox("Uso de estatinas", 
+                                value=st.session_state.patient_data.get('on_statins', False))
         dialysis = st.checkbox("Em diálise", value=st.session_state.patient_data.get('dialysis', False))
     
     with col2:
         st.subheader("Dados Vitais")
-        sbp = st.number_input("Pressão Arterial Sistólica (mmHg)", min_value=70, max_value=250,
-                             value=st.session_state.patient_data.get('sbp', 70), step=1)
+        sbp = optional_number_input("Pressão Arterial Sistólica (mmHg)", "sbp", help_text="Deixe vazio se não disponível")
         
         st.subheader("Lipidograma")
-        total_chol = st.number_input("Colesterol Total (mg/dL)", min_value=50, max_value=500,
-                                    value=st.session_state.patient_data.get('total_chol', 50), step=1)
-        hdl_chol = st.number_input("HDL Colesterol (mg/dL)", min_value=10, max_value=150,
-                                  value=st.session_state.patient_data.get('hdl_chol', 10), step=1)
+        total_chol = optional_number_input("Colesterol Total (mg/dL)", "total_chol", help_text="Deixe vazio se não disponível")
+        hdl_chol = optional_number_input("HDL Colesterol (mg/dL)", "hdl_chol", help_text="Deixe vazio se não disponível")
         
         st.subheader("Função Renal")
-        creatinine = st.number_input("Creatinina sérica (mg/dL)", min_value=0.1, max_value=20.0,
-                                    value=st.session_state.patient_data.get('creatinine', 0.1), step=0.1)
-        egfr = st.number_input("eTFG (mL/min/1.73m²)", min_value=5, max_value=150,
-                              value=st.session_state.patient_data.get('egfr', 5), step=1)
-        uacr = st.number_input("RACu - Relação Albumina/Creatinina Urinária (mg/g)", 
-                              min_value=0.0, max_value=5000.0,
-                              value=st.session_state.patient_data.get('uacr', 0.0), step=1.0)
+        creatinine = optional_number_input("Creatinina sérica (mg/dL)", "creatinine", help_text="Deixe vazio se não disponível")
+        egfr = optional_number_input("eTFG (mL/min/1.73m²)", "egfr", help_text="Deixe vazio se não disponível")
+        uacr = optional_number_input("RACu - Relação Albumina/Creatinina Urinária (mg/g)", "uacr", help_text="Deixe vazio se não disponível")
+        use_uacr = st.checkbox("Usar RACu no cálculo PREVENT", 
+                              value=st.session_state.patient_data.get('use_uacr', False),
+                              help="Marque para incluir RACu no cálculo do risco cardiovascular")
     
     with col3:
         st.subheader("Glicemia e Insulina")
-        fasting_glucose = st.number_input("Glicemia de jejum (mg/dL)", min_value=30, max_value=600,
-                                         value=st.session_state.patient_data.get('fasting_glucose', 30), step=1)
-        hba1c = st.number_input("HbA1c (%)", min_value=3.0, max_value=20.0,
-                               value=st.session_state.patient_data.get('hba1c', 3.0), step=0.1)
-        fasting_insulin = st.number_input("Insulina de jejum (μU/mL)", min_value=0.1, max_value=300.0,
-                                         value=st.session_state.patient_data.get('fasting_insulin', 0.1), step=0.1)
+        fasting_glucose = optional_number_input("Glicemia de jejum (mg/dL)", "fasting_glucose", help_text="Deixe vazio se não disponível")
+        hba1c = optional_number_input("HbA1c (%)", "hba1c", help_text="Deixe vazio se não disponível")
+        use_hba1c = st.checkbox("Usar HbA1c no cálculo PREVENT", 
+                               value=st.session_state.patient_data.get('use_hba1c', False),
+                               help="Marque para incluir HbA1c no cálculo do risco cardiovascular")
+        fasting_insulin = optional_number_input("Insulina de jejum (μU/mL)", "fasting_insulin", help_text="Deixe vazio se não disponível")
         
         st.subheader("Função Hepática")
-        ast = st.number_input("AST (U/L)", min_value=1, max_value=1000,
-                            value=st.session_state.patient_data.get('ast', 1), step=1)
-        alt = st.number_input("ALT (U/L)", min_value=1, max_value=1000,
-                            value=st.session_state.patient_data.get('alt', 1), step=1)
-        bilirubin = st.number_input("Bilirrubina total (mg/dL)", min_value=0.1, max_value=50.0,
-                                   value=st.session_state.patient_data.get('bilirubin', 0.1), step=0.1)
-        albumin = st.number_input("Albumina (g/dL)", min_value=1.0, max_value=6.0,
-                                 value=st.session_state.patient_data.get('albumin', 1.0), step=0.1)
-        inr = st.number_input("INR", min_value=0.8, max_value=10.0,
-                            value=st.session_state.patient_data.get('inr', 0.8), step=0.1)
-        platelets = st.number_input("Plaquetas (×10⁹/L)", min_value=1, max_value=1000,
-                                   value=st.session_state.patient_data.get('platelets', 1), step=1)
+        ast = optional_number_input("AST (U/L)", "ast", help_text="Deixe vazio se não disponível")
+        alt = optional_number_input("ALT (U/L)", "alt", help_text="Deixe vazio se não disponível")
+        bilirubin = optional_number_input("Bilirrubina total (mg/dL)", "bilirubin", help_text="Deixe vazio se não disponível")
+        albumin = optional_number_input("Albumina (g/dL)", "albumin", help_text="Deixe vazio se não disponível")
+        inr = optional_number_input("INR", "inr", help_text="Deixe vazio se não disponível")
+        platelets = optional_number_input("Plaquetas (×10⁹/L)", "platelets", help_text="Deixe vazio se não disponível")
     
     # Automatically save data to session state as user inputs
     st.session_state.patient_data = {
@@ -292,6 +319,7 @@ with tabs[0]:
         'diabetes': diabetes,
         'smoker': smoker,
         'on_bp_meds': on_bp_meds,
+        'on_statins': on_statins,
         'dialysis': dialysis,
         'sbp': sbp,
         'total_chol': total_chol,
@@ -299,8 +327,10 @@ with tabs[0]:
         'creatinine': creatinine,
         'egfr': egfr,
         'uacr': uacr,
+        'use_uacr': use_uacr,
         'fasting_glucose': fasting_glucose,
         'hba1c': hba1c,
+        'use_hba1c': use_hba1c,
         'fasting_insulin': fasting_insulin,
         'ast': ast,
         'alt': alt,
@@ -332,10 +362,10 @@ with tabs[1]:
         def has_valid_data(params_needed):
             """Check if the patient data has realistic values for required parameters"""
             for param, min_val in params_needed.items():
-                val = pd.get(param, 0)
+                val = pd.get(param)
                 if isinstance(val, bool):
                     continue  # Booleans are always valid
-                if val <= min_val:
+                if val is None or val <= min_val:
                     return False, param
             return True, None
         
@@ -353,10 +383,10 @@ with tabs[1]:
                 'albumin': 'Albumina', 'inr': 'INR', 'hba1c': 'HbA1c'
             }
             for param, min_val in params_needed.items():
-                val = pd.get(param, 0)
+                val = pd.get(param)
                 if isinstance(val, bool):
                     continue
-                if val <= min_val:
+                if val is None or val <= min_val:
                     missing.append(param_labels.get(param, param))
             return missing
         
@@ -722,41 +752,45 @@ with tabs[1]:
             """, unsafe_allow_html=True)
             
             # Kt/V requires additional dialysis-specific inputs
-            col_a, col_b = st.columns(2)
-            with col_a:
-                pre_bun = st.number_input("BUN pré-diálise (mg/dL)", min_value=1, max_value=300, value=60, step=1, key="ktv_pre")
-                post_bun = st.number_input("BUN pós-diálise (mg/dL)", min_value=1, max_value=200, value=20, step=1, key="ktv_post")
-            with col_b:
-                dialysis_time = st.number_input("Tempo de diálise (horas)", min_value=0.5, max_value=10.0, value=4.0, step=0.5, key="ktv_time")
-                ultrafiltration = st.number_input("Ultrafiltração (L)", min_value=0.0, max_value=10.0, value=2.0, step=0.1, key="ktv_uf")
-            
-            # Check if weight is valid
-            is_valid, missing_param = has_valid_data({'weight': 1.0})
-            
-            if not is_valid:
-                st.warning(f"⚠️ **Dados faltantes:** Peso")
+            # Only show if patient is on dialysis
+            if not pd.get('dialysis', False):
+                st.info("ℹ️ **Kt/V** é aplicável apenas para pacientes em diálise. Marque 'Em diálise' na aba de Dados do Paciente.")
             else:
-                try:
-                    calculator = KtVCalculator()
-                    result = calculator.calculate(
-                        pre_bun=pre_bun,
-                        post_bun=post_bun,
-                        dialysis_time=dialysis_time,
-                        ultrafiltration=ultrafiltration,
-                        post_weight=pd['weight']
-                    )
-                    col_a, col_b = st.columns(2)
-                    with col_a:
-                        st.metric("Kt/V", result['ktv'])
-                    with col_b:
-                        st.metric("Adequação", result['adequacy'])
-                    st.markdown(f"""
-                        <div class="classification-box">
-                            <strong>Recomendação:</strong> {result['recommendation']}
-                        </div>
-                    """, unsafe_allow_html=True)
-                except Exception as e:
-                    st.error(f"Erro: {str(e)}")
+                col_a, col_b = st.columns(2)
+                with col_a:
+                    pre_bun = st.number_input("BUN pré-diálise (mg/dL)", min_value=1, max_value=300, value=60, step=1, key="ktv_pre")
+                    post_bun = st.number_input("BUN pós-diálise (mg/dL)", min_value=1, max_value=200, value=20, step=1, key="ktv_post")
+                with col_b:
+                    dialysis_time = st.number_input("Tempo de diálise (horas)", min_value=0.5, max_value=10.0, value=4.0, step=0.5, key="ktv_time")
+                    ultrafiltration = st.number_input("Ultrafiltração (L)", min_value=0.0, max_value=10.0, value=2.0, step=0.1, key="ktv_uf")
+                
+                # Check if weight is valid
+                is_valid, missing_param = has_valid_data({'weight': 1.0})
+                
+                if not is_valid:
+                    st.warning(f"⚠️ **Dados faltantes:** Peso")
+                else:
+                    try:
+                        calculator = KtVCalculator()
+                        result = calculator.calculate(
+                            pre_bun=pre_bun,
+                            post_bun=post_bun,
+                            dialysis_time=dialysis_time,
+                            ultrafiltration=ultrafiltration,
+                            post_weight=pd['weight']
+                        )
+                        col_a, col_b = st.columns(2)
+                        with col_a:
+                            st.metric("Kt/V", result['ktv'])
+                        with col_b:
+                            st.metric("Adequação", result['adequacy'])
+                        st.markdown(f"""
+                            <div class="classification-box">
+                                <strong>Recomendação:</strong> {result['recommendation']}
+                            </div>
+                        """, unsafe_allow_html=True)
+                    except Exception as e:
+                        st.error(f"Erro: {str(e)}")
         
         # ===== CARDIOLOGY SECTION =====
         st.markdown("---")
@@ -792,6 +826,10 @@ with tabs[1]:
             try:
                 sex_code = 'M' if pd['sex'] == "Masculino" else 'F'
                 calculator = PREVENTCalculator()
+                
+                # Get optional parameters based on checkboxes
+                uacr_value, hba1c_value = get_prevent_optional_params(pd)
+                
                 results = calculator.calculate_risk_score(
                     age=pd['age'],
                     sex=sex_code,
@@ -803,8 +841,8 @@ with tabs[1]:
                     diabetes=pd['diabetes'],
                     smoker=pd['smoker'],
                     egfr=pd['egfr'],
-                    uacr=pd.get('uacr') if pd.get('uacr', 0) > 0 else None,
-                    hba1c=pd.get('hba1c') if pd.get('hba1c', 0) > 0 else None
+                    uacr=uacr_value,
+                    hba1c=hba1c_value
                 )
                 
                 # Display overall risk category
@@ -874,6 +912,10 @@ with tabs[2]:
             sex_code = 'M' if pd['sex'] == "Masculino" else 'F'
             
             calculator = PREVENTCalculator()
+            
+            # Get optional parameters based on checkboxes
+            uacr_value, hba1c_value = get_prevent_optional_params(pd)
+            
             results = calculator.calculate_risk_score(
                 age=pd['age'],
                 sex=sex_code,
@@ -885,8 +927,8 @@ with tabs[2]:
                 diabetes=pd['diabetes'],
                 smoker=pd['smoker'],
                 egfr=pd['egfr'],
-                uacr=pd.get('uacr') if pd.get('uacr', 0) > 0 else None,
-                hba1c=pd.get('hba1c') if pd.get('hba1c', 0) > 0 else None
+                uacr=uacr_value,
+                hba1c=hba1c_value
             )
             
             # Display overall risk category
@@ -1186,34 +1228,38 @@ with tabs[4]:
             </div>
             """, unsafe_allow_html=True)
             
-            col1, col2, col3 = st.columns(3)
-            with col1:
-                pre_bun = st.number_input("BUN pré-diálise (mg/dL)", min_value=1, max_value=300, value=60, step=1, key="nephro_pre_bun")
-                post_bun = st.number_input("BUN pós-diálise (mg/dL)", min_value=1, max_value=200, value=20, step=1, key="nephro_post_bun")
-            with col2:
-                dialysis_time = st.number_input("Tempo de diálise (horas)", min_value=0.5, max_value=10.0, value=4.0, step=0.5, key="nephro_time")
-            with col3:
-                ultrafiltration = st.number_input("Ultrafiltração (L)", min_value=0.0, max_value=10.0, value=2.0, step=0.1, key="nephro_uf")
-            
-            try:
-                calculator = KtVCalculator()
-                result = calculator.calculate(
-                    pre_bun=pre_bun,
-                    post_bun=post_bun,
-                    dialysis_time=dialysis_time,
-                    ultrafiltration=ultrafiltration,
-                    post_weight=pd['weight']
-                )
-                
-                col1, col2 = st.columns(2)
+            # Only show if patient is on dialysis
+            if not pd.get('dialysis', False):
+                st.warning("⚠️ **Kt/V** é aplicável apenas para pacientes em diálise. Marque 'Em diálise' na aba de Dados do Paciente para habilitar este cálculo.")
+            else:
+                col1, col2, col3 = st.columns(3)
                 with col1:
-                    st.metric("Kt/V", result['ktv'])
+                    pre_bun = st.number_input("BUN pré-diálise (mg/dL)", min_value=1, max_value=300, value=60, step=1, key="nephro_pre_bun")
+                    post_bun = st.number_input("BUN pós-diálise (mg/dL)", min_value=1, max_value=200, value=20, step=1, key="nephro_post_bun")
                 with col2:
-                    st.metric("Adequação", result['adequacy'])
+                    dialysis_time = st.number_input("Tempo de diálise (horas)", min_value=0.5, max_value=10.0, value=4.0, step=0.5, key="nephro_time")
+                with col3:
+                    ultrafiltration = st.number_input("Ultrafiltração (L)", min_value=0.0, max_value=10.0, value=2.0, step=0.1, key="nephro_uf")
                 
-                st.info(f"**Recomendação:** {result['recommendation']}")
-            except Exception as e:
-                st.error(f"Erro ao calcular: {str(e)}")
+                try:
+                    calculator = KtVCalculator()
+                    result = calculator.calculate(
+                        pre_bun=pre_bun,
+                        post_bun=post_bun,
+                        dialysis_time=dialysis_time,
+                        ultrafiltration=ultrafiltration,
+                        post_weight=pd['weight']
+                    )
+                    
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        st.metric("Kt/V", result['ktv'])
+                    with col2:
+                        st.metric("Adequação", result['adequacy'])
+                    
+                    st.info(f"**Recomendação:** {result['recommendation']}")
+                except Exception as e:
+                    st.error(f"Erro ao calcular: {str(e)}")
 
 # ========== TAB 6: ENDOCRINOLOGY ==========
 with tabs[5]:
