@@ -830,6 +830,11 @@ with tabs[1]:
                 # Get optional parameters based on checkboxes
                 uacr_value, hba1c_value = get_prevent_optional_params(pd)
                 
+                # Calculate BMI
+                bmi_calculator = BMICalculator()
+                bmi_result = bmi_calculator.calculate(weight=pd.get('weight', 0), height=pd.get('height', 1))
+                bmi_value = bmi_result.get('bmi') if bmi_result else None
+
                 results = calculator.calculate_risk_score(
                     age=pd['age'],
                     sex=sex_code,
@@ -841,6 +846,8 @@ with tabs[1]:
                     diabetes=pd['diabetes'],
                     smoker=pd['smoker'],
                     egfr=pd['egfr'],
+                    bmi=bmi_value,
+                    on_statins=pd['on_statins'],
                     uacr=uacr_value,
                     hba1c=hba1c_value
                 )
@@ -850,10 +857,11 @@ with tabs[1]:
                     'Baixo': 'risk-low',
                     'Limítrofe': 'risk-borderline',
                     'Intermediário': 'risk-intermediate',
-                    'Alto': 'risk-high'
+                    'Alto': 'risk-high',
+                    'Indisponível': 'risk-intermediate' # Default color
                 }
                 st.markdown(f"""
-                    <div class="risk-box {risk_class_map[results['risk_category']]}">
+                    <div class="risk-box {risk_class_map.get(results['risk_category'], 'risk-intermediate')}">
                         Categoria de Risco Geral: {results['risk_category'].upper()}
                     </div>
                 """, unsafe_allow_html=True)
@@ -862,18 +870,18 @@ with tabs[1]:
                 
                 with col1:
                     st.markdown("**📊 DCV Total**")
-                    st.metric("10 anos", f"{results['total_cvd_10yr']}%")
-                    st.metric("30 anos", f"{results['total_cvd_30yr']}%")
-                
+                    st.metric("10 anos", f"{results['total_cvd_10yr']}%" if isinstance(results['total_cvd_10yr'], (int, float)) else results['total_cvd_10yr'])
+                    st.metric("30 anos", f"{results['total_cvd_30yr']}%" if isinstance(results['total_cvd_30yr'], (int, float)) else results['total_cvd_30yr'])
+
                 with col2:
                     st.markdown("**🩺 DCVA (Aterosclerose)**")
-                    st.metric("10 anos", f"{results['ascvd_10yr']}%")
-                    st.metric("30 anos", f"{results['ascvd_30yr']}%")
-                
+                    st.metric("10 anos", f"{results['ascvd_10yr']}%" if isinstance(results['ascvd_10yr'], (int, float)) else results['ascvd_10yr'])
+                    st.metric("30 anos", f"{results['ascvd_30yr']}%" if isinstance(results['ascvd_30yr'], (int, float)) else results['ascvd_30yr'])
+
                 with col3:
                     st.markdown("**💔 Insuficiência Cardíaca**")
-                    st.metric("10 anos", f"{results['hf_10yr']}%")
-                    st.metric("30 anos", f"{results['hf_30yr']}%")
+                    st.metric("10 anos", f"{results['hf_10yr']}%" if isinstance(results['hf_10yr'], (int, float)) else results['hf_10yr'])
+                    st.metric("30 anos", f"{results['hf_30yr']}%" if isinstance(results['hf_30yr'], (int, float)) else results['hf_30yr'])
                 
             except Exception as e:
                 st.error(f"Erro ao calcular PREVENT: {str(e)}")
@@ -915,6 +923,11 @@ with tabs[2]:
             
             # Get optional parameters based on checkboxes
             uacr_value, hba1c_value = get_prevent_optional_params(pd)
+
+            # Calculate BMI
+            bmi_calculator = BMICalculator()
+            bmi_result = bmi_calculator.calculate(weight=pd.get('weight', 0), height=pd.get('height', 1))
+            bmi_value = bmi_result.get('bmi') if bmi_result else None
             
             results = calculator.calculate_risk_score(
                 age=pd['age'],
@@ -927,6 +940,8 @@ with tabs[2]:
                 diabetes=pd['diabetes'],
                 smoker=pd['smoker'],
                 egfr=pd['egfr'],
+                bmi=bmi_value,
+                on_statins=pd['on_statins'],
                 uacr=uacr_value,
                 hba1c=hba1c_value
             )
@@ -936,10 +951,11 @@ with tabs[2]:
                 'Baixo': 'risk-low',
                 'Limítrofe': 'risk-borderline',
                 'Intermediário': 'risk-intermediate',
-                'Alto': 'risk-high'
+                'Alto': 'risk-high',
+                'Indisponível': 'risk-intermediate' # Default color
             }
             st.markdown(f"""
-                <div class="risk-box {risk_class_map[results['risk_category']]}">
+                <div class="risk-box {risk_class_map.get(results['risk_category'], 'risk-intermediate')}">
                     Categoria de Risco Geral: {results['risk_category'].upper()}
                 </div>
             """, unsafe_allow_html=True)
@@ -951,9 +967,9 @@ with tabs[2]:
             st.markdown("*Risco de qualquer evento cardiovascular (infarto, AVC, insuficiência cardíaca, etc.)*")
             col1, col2 = st.columns(2)
             with col1:
-                st.metric("Risco em 10 anos", f"{results['total_cvd_10yr']}%")
+                st.metric("Risco em 10 anos", f"{results['total_cvd_10yr']}%" if isinstance(results['total_cvd_10yr'], (int, float)) else results['total_cvd_10yr'])
             with col2:
-                st.metric("Risco em 30 anos", f"{results['total_cvd_30yr']}%")
+                st.metric("Risco em 30 anos", f"{results['total_cvd_30yr']}%" if isinstance(results['total_cvd_30yr'], (int, float)) else results['total_cvd_30yr'])
             
             st.markdown("---")
             
@@ -962,9 +978,9 @@ with tabs[2]:
             st.markdown("*Risco de infarto do miocárdio ou AVC isquêmico*")
             col1, col2 = st.columns(2)
             with col1:
-                st.metric("Risco em 10 anos", f"{results['ascvd_10yr']}%")
+                st.metric("Risco em 10 anos", f"{results['ascvd_10yr']}%" if isinstance(results['ascvd_10yr'], (int, float)) else results['ascvd_10yr'])
             with col2:
-                st.metric("Risco em 30 anos", f"{results['ascvd_30yr']}%")
+                st.metric("Risco em 30 anos", f"{results['ascvd_30yr']}%" if isinstance(results['ascvd_30yr'], (int, float)) else results['ascvd_30yr'])
             
             st.markdown("---")
             
@@ -973,9 +989,9 @@ with tabs[2]:
             st.markdown("*Risco de desenvolver insuficiência cardíaca congestiva*")
             col1, col2 = st.columns(2)
             with col1:
-                st.metric("Risco em 10 anos", f"{results['hf_10yr']}%")
+                st.metric("Risco em 10 anos", f"{results['hf_10yr']}%" if isinstance(results['hf_10yr'], (int, float)) else results['hf_10yr'])
             with col2:
-                st.metric("Risco em 30 anos", f"{results['hf_30yr']}%")
+                st.metric("Risco em 30 anos", f"{results['hf_30yr']}%" if isinstance(results['hf_30yr'], (int, float)) else results['hf_30yr'])
             
             st.markdown("---")
             
@@ -983,7 +999,7 @@ with tabs[2]:
             st.subheader("💊 Recomendações Clínicas")
             recommendations = calculator.get_recommendations(
                 results['risk_category'], 
-                results['total_cvd_10yr']
+                results.get('total_cvd_10yr', 0) if isinstance(results.get('total_cvd_10yr'), (int, float)) else 0
             )
             for i, rec in enumerate(recommendations, 1):
                 st.markdown(f"**{i}.** {rec}")
