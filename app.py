@@ -400,7 +400,7 @@ with tabs[1]:
             'Child-Pugh': has_valid_data({'bilirubin': 0.1, 'albumin': 1.0, 'inr': 0.8})[0],
             'eTFG': has_valid_data({'creatinine': 0.1, 'age': 1})[0],
             'Kt/V': has_valid_data({'weight': 1.0})[0],
-            'PREVENT': has_valid_data({'age': 1, 'sbp': 70, 'total_chol': 50, 'hdl_chol': 10, 'egfr': 5})[0]
+            'PREVENT': has_valid_data({'age': 1, 'sbp': 70, 'total_chol': 50, 'hdl_chol': 10, 'egfr': 5, 'weight': 1, 'height': 1})[0]
         }
         
         # Display availability summary
@@ -814,12 +814,12 @@ with tabs[1]:
         
         # Check if data is valid for PREVENT
         is_valid, missing_param = has_valid_data({
-            'age': 1, 'sbp': 70, 'total_chol': 50, 'hdl_chol': 10, 'egfr': 5
+            'age': 1, 'sbp': 70, 'total_chol': 50, 'hdl_chol': 10, 'egfr': 5, 'weight': 1, 'height': 1
         })
         
         if not is_valid:
             missing = get_missing_params_msg({
-                'age': 1, 'sbp': 70, 'total_chol': 50, 'hdl_chol': 10, 'egfr': 5
+                'age': 1, 'sbp': 70, 'total_chol': 50, 'hdl_chol': 10, 'egfr': 5, 'weight': 1, 'height': 1
             })
             st.warning(f"⚠️ **Dados faltantes:** {', '.join(missing)}")
         else:
@@ -830,11 +830,6 @@ with tabs[1]:
                 # Get optional parameters based on checkboxes
                 uacr_value, hba1c_value = get_prevent_optional_params(pd)
                 
-                # Calculate BMI
-                bmi_calculator = BMICalculator()
-                bmi_result = bmi_calculator.calculate(weight=pd.get('weight', 0), height=pd.get('height', 1))
-                bmi_value = bmi_result.get('bmi') if bmi_result else None
-
                 results = calculator.calculate_risk_score(
                     age=pd['age'],
                     sex=sex_code,
@@ -846,7 +841,8 @@ with tabs[1]:
                     diabetes=pd['diabetes'],
                     smoker=pd['smoker'],
                     egfr=pd['egfr'],
-                    bmi=bmi_value,
+                    weight=pd['weight'],
+                    height=pd['height'],
                     on_statins=pd['on_statins'],
                     uacr=uacr_value,
                     hba1c=hba1c_value
@@ -923,25 +919,21 @@ with tabs[2]:
             
             # Get optional parameters based on checkboxes
             uacr_value, hba1c_value = get_prevent_optional_params(pd)
-
-            # Calculate BMI
-            bmi_calculator = BMICalculator()
-            bmi_result = bmi_calculator.calculate(weight=pd.get('weight', 0), height=pd.get('height', 1))
-            bmi_value = bmi_result.get('bmi') if bmi_result else None
             
             results = calculator.calculate_risk_score(
-                age=pd['age'],
+                age=pd.get('age'),
                 sex=sex_code,
                 race='other',  # Default value
-                total_cholesterol=pd['total_chol'],
-                hdl_cholesterol=pd['hdl_chol'],
-                sbp=pd['sbp'],
-                on_bp_meds=pd['on_bp_meds'],
-                diabetes=pd['diabetes'],
-                smoker=pd['smoker'],
-                egfr=pd['egfr'],
-                bmi=bmi_value,
-                on_statins=pd['on_statins'],
+                total_cholesterol=pd.get('total_chol'),
+                hdl_cholesterol=pd.get('hdl_chol'),
+                sbp=pd.get('sbp'),
+                on_bp_meds=pd.get('on_bp_meds'),
+                diabetes=pd.get('diabetes'),
+                smoker=pd.get('smoker'),
+                egfr=pd.get('egfr'),
+                weight=pd.get('weight'),
+                height=pd.get('height'),
+                on_statins=pd.get('on_statins'),
                 uacr=uacr_value,
                 hba1c=hba1c_value
             )
