@@ -234,8 +234,8 @@ with tabs[0]:
     
     with col1:
         st.subheader("Dados Demográficos")
-        # Note: Default values are set to 1 for easy testing
-        # This ensures the form starts with minimal values for testing purposes.
+        # Note: Default values are set to 1 where possible for easy testing
+        # When 1 is below minimum, we use the minimum value instead due to Streamlit validation
         age = st.number_input("Idade (anos)", min_value=1, max_value=120, 
                              value=st.session_state.patient_data.get('age', 1), step=1)
         sex = st.selectbox("Sexo", ["Masculino", "Feminino"],
@@ -243,7 +243,7 @@ with tabs[0]:
         weight = st.number_input("Peso (kg)", min_value=1.0, max_value=300.0,
                                 value=st.session_state.patient_data.get('weight', 1.0), step=0.1)
         height = st.number_input("Altura (cm)", min_value=50.0, max_value=250.0,
-                                value=st.session_state.patient_data.get('height', 1.0), step=0.1)
+                                value=st.session_state.patient_data.get('height', 50.0), step=0.1)
         
         st.subheader("História Clínica")
         diabetes = st.checkbox("Diabetes", value=st.session_state.patient_data.get('diabetes', False))
@@ -257,19 +257,19 @@ with tabs[0]:
     with col2:
         st.subheader("Dados Vitais")
         sbp = st.number_input("Pressão Arterial Sistólica (mmHg)", min_value=70, max_value=250,
-                             value=st.session_state.patient_data.get('sbp', 1), step=1)
+                             value=st.session_state.patient_data.get('sbp', 70), step=1)
         
         st.subheader("Lipidograma")
         total_chol = st.number_input("Colesterol Total (mg/dL)", min_value=50, max_value=500,
-                                    value=st.session_state.patient_data.get('total_chol', 1), step=1)
+                                    value=st.session_state.patient_data.get('total_chol', 50), step=1)
         hdl_chol = st.number_input("HDL Colesterol (mg/dL)", min_value=10, max_value=150,
-                                  value=st.session_state.patient_data.get('hdl_chol', 1), step=1)
+                                  value=st.session_state.patient_data.get('hdl_chol', 10), step=1)
         
         st.subheader("Função Renal")
         creatinine = st.number_input("Creatinina sérica (mg/dL)", min_value=0.1, max_value=20.0,
                                     value=st.session_state.patient_data.get('creatinine', 1.0), step=0.1)
         egfr = st.number_input("eTFG (mL/min/1.73m²)", min_value=5, max_value=150,
-                              value=st.session_state.patient_data.get('egfr', 1), step=1)
+                              value=st.session_state.patient_data.get('egfr', 5), step=1)
         uacr = st.number_input("RACu - Relação Albumina/Creatinina Urinária (mg/g)", 
                               min_value=0.0, max_value=5000.0,
                               value=st.session_state.patient_data.get('uacr', 1.0), step=1.0)
@@ -280,9 +280,9 @@ with tabs[0]:
     with col3:
         st.subheader("Glicemia e Insulina")
         fasting_glucose = st.number_input("Glicemia de jejum (mg/dL)", min_value=30, max_value=600,
-                                         value=st.session_state.patient_data.get('fasting_glucose', 1), step=1)
+                                         value=st.session_state.patient_data.get('fasting_glucose', 30), step=1)
         hba1c = st.number_input("HbA1c (%)", min_value=3.0, max_value=20.0,
-                               value=st.session_state.patient_data.get('hba1c', 1.0), step=0.1)
+                               value=st.session_state.patient_data.get('hba1c', 3.0), step=0.1)
         use_hba1c = st.checkbox("Usar HbA1c no cálculo PREVENT", 
                                value=st.session_state.patient_data.get('use_hba1c', False),
                                help="Marque para incluir HbA1c no cálculo do risco cardiovascular")
