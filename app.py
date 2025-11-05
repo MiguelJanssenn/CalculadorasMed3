@@ -5,6 +5,13 @@ from calculators.gastro import FIB4Calculator, MELDCalculator, ChildPughCalculat
 from calculators.nephro import eGFRCalculator, KtVCalculator
 from calculators.endocrino import BMICalculator, HOMAIRCalculator, HOMABetaCalculator
 
+# Helper function to get optional PREVENT parameters
+def get_prevent_optional_params(patient_data):
+    """Get UACR and HbA1c values if checkboxes are checked and values are valid"""
+    uacr_value = patient_data.get('uacr') if patient_data.get('use_uacr', False) and patient_data.get('uacr', 0) > 0 else None
+    hba1c_value = patient_data.get('hba1c') if patient_data.get('use_hba1c', False) and patient_data.get('hba1c', 0) > 0 else None
+    return uacr_value, hba1c_value
+
 # Page configuration
 st.set_page_config(
     page_title="Calculadoras Médicas",
@@ -820,9 +827,8 @@ with tabs[1]:
                 sex_code = 'M' if pd['sex'] == "Masculino" else 'F'
                 calculator = PREVENTCalculator()
                 
-                # Only use uacr and hba1c if the checkboxes are checked
-                uacr_value = pd.get('uacr') if pd.get('use_uacr', False) and pd.get('uacr', 0) > 0 else None
-                hba1c_value = pd.get('hba1c') if pd.get('use_hba1c', False) and pd.get('hba1c', 0) > 0 else None
+                # Get optional parameters based on checkboxes
+                uacr_value, hba1c_value = get_prevent_optional_params(pd)
                 
                 results = calculator.calculate_risk_score(
                     age=pd['age'],
@@ -907,9 +913,8 @@ with tabs[2]:
             
             calculator = PREVENTCalculator()
             
-            # Only use uacr and hba1c if the checkboxes are checked
-            uacr_value = pd.get('uacr') if pd.get('use_uacr', False) and pd.get('uacr', 0) > 0 else None
-            hba1c_value = pd.get('hba1c') if pd.get('use_hba1c', False) and pd.get('hba1c', 0) > 0 else None
+            # Get optional parameters based on checkboxes
+            uacr_value, hba1c_value = get_prevent_optional_params(pd)
             
             results = calculator.calculate_risk_score(
                 age=pd['age'],
