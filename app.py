@@ -232,18 +232,34 @@ with tabs[0]:
     
     col1, col2, col3 = st.columns(3)
     
+    # Helper function to create optional numeric inputs
+    def optional_number_input(label, key, default_value="", help_text=None):
+        """Create a text input that accepts numbers or empty values"""
+        stored_value = st.session_state.patient_data.get(key, default_value)
+        if stored_value == "" or stored_value is None:
+            display_value = ""
+        else:
+            display_value = str(stored_value)
+        
+        value = st.text_input(label, value=display_value, help=help_text, key=f"input_{key}")
+        
+        if value == "":
+            return None
+        try:
+            # Try to convert to float
+            return float(value)
+        except ValueError:
+            st.error(f"'{label}' deve ser um número válido")
+            return None
+    
     with col1:
         st.subheader("Dados Demográficos")
-        # Note: Default values are set to 1 where possible for easy testing
-        # When 1 is below minimum, we use the minimum value instead due to Streamlit validation
-        age = st.number_input("Idade (anos)", min_value=1, max_value=120, 
-                             value=st.session_state.patient_data.get('age', 1), step=1)
+        # Note: Campos agora podem ficar vazios
+        age = optional_number_input("Idade (anos)", "age", help_text="Deixe vazio se não disponível")
         sex = st.selectbox("Sexo", ["Masculino", "Feminino"],
                           index=0 if st.session_state.patient_data.get('sex') == 'Masculino' else 1)
-        weight = st.number_input("Peso (kg)", min_value=1.0, max_value=300.0,
-                                value=st.session_state.patient_data.get('weight', 1.0), step=0.1)
-        height = st.number_input("Altura (cm)", min_value=50.0, max_value=250.0,
-                                value=st.session_state.patient_data.get('height', 50.0), step=0.1)
+        weight = optional_number_input("Peso (kg)", "weight", help_text="Deixe vazio se não disponível")
+        height = optional_number_input("Altura (cm)", "height", help_text="Deixe vazio se não disponível")
         
         st.subheader("História Clínica")
         diabetes = st.checkbox("Diabetes", value=st.session_state.patient_data.get('diabetes', False))
@@ -256,52 +272,36 @@ with tabs[0]:
     
     with col2:
         st.subheader("Dados Vitais")
-        sbp = st.number_input("Pressão Arterial Sistólica (mmHg)", min_value=70, max_value=250,
-                             value=st.session_state.patient_data.get('sbp', 70), step=1)
+        sbp = optional_number_input("Pressão Arterial Sistólica (mmHg)", "sbp", help_text="Deixe vazio se não disponível")
         
         st.subheader("Lipidograma")
-        total_chol = st.number_input("Colesterol Total (mg/dL)", min_value=50, max_value=500,
-                                    value=st.session_state.patient_data.get('total_chol', 50), step=1)
-        hdl_chol = st.number_input("HDL Colesterol (mg/dL)", min_value=10, max_value=150,
-                                  value=st.session_state.patient_data.get('hdl_chol', 10), step=1)
+        total_chol = optional_number_input("Colesterol Total (mg/dL)", "total_chol", help_text="Deixe vazio se não disponível")
+        hdl_chol = optional_number_input("HDL Colesterol (mg/dL)", "hdl_chol", help_text="Deixe vazio se não disponível")
         
         st.subheader("Função Renal")
-        creatinine = st.number_input("Creatinina sérica (mg/dL)", min_value=0.1, max_value=20.0,
-                                    value=st.session_state.patient_data.get('creatinine', 1.0), step=0.1)
-        egfr = st.number_input("eTFG (mL/min/1.73m²)", min_value=5, max_value=150,
-                              value=st.session_state.patient_data.get('egfr', 5), step=1)
-        uacr = st.number_input("RACu - Relação Albumina/Creatinina Urinária (mg/g)", 
-                              min_value=0.0, max_value=5000.0,
-                              value=st.session_state.patient_data.get('uacr', 1.0), step=1.0)
+        creatinine = optional_number_input("Creatinina sérica (mg/dL)", "creatinine", help_text="Deixe vazio se não disponível")
+        egfr = optional_number_input("eTFG (mL/min/1.73m²)", "egfr", help_text="Deixe vazio se não disponível")
+        uacr = optional_number_input("RACu - Relação Albumina/Creatinina Urinária (mg/g)", "uacr", help_text="Deixe vazio se não disponível")
         use_uacr = st.checkbox("Usar RACu no cálculo PREVENT", 
                               value=st.session_state.patient_data.get('use_uacr', False),
                               help="Marque para incluir RACu no cálculo do risco cardiovascular")
     
     with col3:
         st.subheader("Glicemia e Insulina")
-        fasting_glucose = st.number_input("Glicemia de jejum (mg/dL)", min_value=30, max_value=600,
-                                         value=st.session_state.patient_data.get('fasting_glucose', 30), step=1)
-        hba1c = st.number_input("HbA1c (%)", min_value=3.0, max_value=20.0,
-                               value=st.session_state.patient_data.get('hba1c', 3.0), step=0.1)
+        fasting_glucose = optional_number_input("Glicemia de jejum (mg/dL)", "fasting_glucose", help_text="Deixe vazio se não disponível")
+        hba1c = optional_number_input("HbA1c (%)", "hba1c", help_text="Deixe vazio se não disponível")
         use_hba1c = st.checkbox("Usar HbA1c no cálculo PREVENT", 
                                value=st.session_state.patient_data.get('use_hba1c', False),
                                help="Marque para incluir HbA1c no cálculo do risco cardiovascular")
-        fasting_insulin = st.number_input("Insulina de jejum (μU/mL)", min_value=0.1, max_value=300.0,
-                                         value=st.session_state.patient_data.get('fasting_insulin', 1.0), step=0.1)
+        fasting_insulin = optional_number_input("Insulina de jejum (μU/mL)", "fasting_insulin", help_text="Deixe vazio se não disponível")
         
         st.subheader("Função Hepática")
-        ast = st.number_input("AST (U/L)", min_value=1, max_value=1000,
-                            value=st.session_state.patient_data.get('ast', 1), step=1)
-        alt = st.number_input("ALT (U/L)", min_value=1, max_value=1000,
-                            value=st.session_state.patient_data.get('alt', 1), step=1)
-        bilirubin = st.number_input("Bilirrubina total (mg/dL)", min_value=0.1, max_value=50.0,
-                                   value=st.session_state.patient_data.get('bilirubin', 1.0), step=0.1)
-        albumin = st.number_input("Albumina (g/dL)", min_value=1.0, max_value=6.0,
-                                 value=st.session_state.patient_data.get('albumin', 1.0), step=0.1)
-        inr = st.number_input("INR", min_value=0.8, max_value=10.0,
-                            value=st.session_state.patient_data.get('inr', 1.0), step=0.1)
-        platelets = st.number_input("Plaquetas (×10⁹/L)", min_value=1, max_value=1000,
-                                   value=st.session_state.patient_data.get('platelets', 1), step=1)
+        ast = optional_number_input("AST (U/L)", "ast", help_text="Deixe vazio se não disponível")
+        alt = optional_number_input("ALT (U/L)", "alt", help_text="Deixe vazio se não disponível")
+        bilirubin = optional_number_input("Bilirrubina total (mg/dL)", "bilirubin", help_text="Deixe vazio se não disponível")
+        albumin = optional_number_input("Albumina (g/dL)", "albumin", help_text="Deixe vazio se não disponível")
+        inr = optional_number_input("INR", "inr", help_text="Deixe vazio se não disponível")
+        platelets = optional_number_input("Plaquetas (×10⁹/L)", "platelets", help_text="Deixe vazio se não disponível")
     
     # Automatically save data to session state as user inputs
     st.session_state.patient_data = {
@@ -355,10 +355,10 @@ with tabs[1]:
         def has_valid_data(params_needed):
             """Check if the patient data has realistic values for required parameters"""
             for param, min_val in params_needed.items():
-                val = pd.get(param, 0)
+                val = pd.get(param)
                 if isinstance(val, bool):
                     continue  # Booleans are always valid
-                if val <= min_val:
+                if val is None or val <= min_val:
                     return False, param
             return True, None
         
@@ -376,10 +376,10 @@ with tabs[1]:
                 'albumin': 'Albumina', 'inr': 'INR', 'hba1c': 'HbA1c'
             }
             for param, min_val in params_needed.items():
-                val = pd.get(param, 0)
+                val = pd.get(param)
                 if isinstance(val, bool):
                     continue
-                if val <= min_val:
+                if val is None or val <= min_val:
                     missing.append(param_labels.get(param, param))
             return missing
         
