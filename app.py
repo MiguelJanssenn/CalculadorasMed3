@@ -13,15 +13,67 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS for modern design
+# Custom CSS for modern dashboard design
 st.markdown("""
     <style>
     .main {
         padding: 0rem 1rem;
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
     }
+    
+    /* Calculator Card Styling */
+    .calculator-card {
+        background: white;
+        border-radius: 16px;
+        padding: 1.5rem;
+        margin: 1rem 0;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+        border: 1px solid #e1e8ed;
+        transition: all 0.3s ease;
+    }
+    .calculator-card:hover {
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
+        transform: translateY(-2px);
+    }
+    
+    .calc-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 1rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 2px solid #f0f0f0;
+    }
+    
+    .calc-icon {
+        font-size: 2rem;
+        margin-right: 0.75rem;
+    }
+    
+    .calc-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #1a1a1a;
+        margin: 0;
+    }
+    
+    .calc-subtitle {
+        font-size: 0.875rem;
+        color: #666;
+        margin: 0;
+    }
+    
+    .result-badge {
+        display: inline-block;
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 1.1rem;
+        margin: 0.5rem 0;
+    }
+    
     .stButton>button {
         width: 100%;
-        background-color: #FF4B4B;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         color: white;
         font-weight: bold;
         border-radius: 10px;
@@ -30,51 +82,79 @@ st.markdown("""
         transition: all 0.3s;
     }
     .stButton>button:hover {
-        background-color: #FF6B6B;
+        background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
         transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
     }
     .risk-box {
         padding: 1.5rem;
-        border-radius: 10px;
+        border-radius: 12px;
         margin: 1rem 0;
         text-align: center;
         font-size: 1.2rem;
         font-weight: bold;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     }
     .risk-low {
-        background-color: #D4EDDA;
+        background: linear-gradient(135deg, #D4EDDA 0%, #a8e6cf 100%);
         color: #155724;
         border: 2px solid #C3E6CB;
     }
     .risk-borderline {
-        background-color: #FFF3CD;
+        background: linear-gradient(135deg, #FFF3CD 0%, #ffeaa7 100%);
         color: #856404;
         border: 2px solid #FFEEBA;
     }
     .risk-intermediate {
-        background-color: #FFE5CC;
+        background: linear-gradient(135deg, #FFE5CC 0%, #fdcb6e 100%);
         color: #CC5500;
         border: 2px solid #FFD4A3;
     }
     .risk-high {
-        background-color: #F8D7DA;
+        background: linear-gradient(135deg, #F8D7DA 0%, #fab1a0 100%);
         color: #721C24;
         border: 2px solid #F5C6CB;
     }
     .info-box {
-        background-color: #E7F3FF;
+        background: linear-gradient(135deg, #E7F3FF 0%, #a8daff 100%);
         padding: 1rem;
-        border-radius: 10px;
+        border-radius: 12px;
         border-left: 4px solid #0066CC;
         margin: 1rem 0;
     }
     .data-saved {
-        background-color: #D4EDDA;
+        background: linear-gradient(135deg, #D4EDDA 0%, #a8e6cf 100%);
         padding: 1rem;
-        border-radius: 10px;
+        border-radius: 12px;
         border-left: 4px solid #28A745;
         margin: 1rem 0;
+    }
+    
+    /* Dashboard Grid */
+    .dashboard-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 1.5rem;
+        margin: 1.5rem 0;
+    }
+    
+    /* Metric styling */
+    .metric-container {
+        background: #f8f9fa;
+        padding: 1rem;
+        border-radius: 8px;
+        margin: 0.5rem 0;
+    }
+    
+    .auto-calc-badge {
+        display: inline-block;
+        background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        color: white;
+        padding: 0.25rem 0.75rem;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        margin-left: 0.5rem;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -86,6 +166,7 @@ if 'patient_data' not in st.session_state:
 # Title
 st.title("⚕️ Calculadoras Médicas")
 st.markdown("### Plataforma Integrada de Scores e Calculadoras para Prática Médica")
+st.markdown('<span class="auto-calc-badge">✨ Cálculo Automático Ativo</span>', unsafe_allow_html=True)
 
 # Tabs for navigation
 tabs = st.tabs([
@@ -171,96 +252,409 @@ with tabs[0]:
         platelets = st.number_input("Plaquetas (×10⁹/L)", min_value=1, max_value=1000,
                                    value=st.session_state.patient_data.get('platelets', 200), step=1)
     
+    # Automatically save data to session state as user inputs
+    st.session_state.patient_data = {
+        'age': age,
+        'sex': sex,
+        'weight': weight,
+        'height': height,
+        'diabetes': diabetes,
+        'smoker': smoker,
+        'on_bp_meds': on_bp_meds,
+        'dialysis': dialysis,
+        'sbp': sbp,
+        'total_chol': total_chol,
+        'hdl_chol': hdl_chol,
+        'creatinine': creatinine,
+        'egfr': egfr,
+        'uacr': uacr,
+        'fasting_glucose': fasting_glucose,
+        'hba1c': hba1c,
+        'fasting_insulin': fasting_insulin,
+        'ast': ast,
+        'alt': alt,
+        'bilirubin': bilirubin,
+        'albumin': albumin,
+        'inr': inr,
+        'platelets': platelets
+    }
+    
     st.markdown("---")
-    if st.button("💾 Salvar Dados do Paciente", type="primary"):
-        st.session_state.patient_data = {
-            'age': age,
-            'sex': sex,
-            'weight': weight,
-            'height': height,
-            'diabetes': diabetes,
-            'smoker': smoker,
-            'on_bp_meds': on_bp_meds,
-            'dialysis': dialysis,
-            'sbp': sbp,
-            'total_chol': total_chol,
-            'hdl_chol': hdl_chol,
-            'creatinine': creatinine,
-            'egfr': egfr,
-            'uacr': uacr,
-            'fasting_glucose': fasting_glucose,
-            'hba1c': hba1c,
-            'fasting_insulin': fasting_insulin,
-            'ast': ast,
-            'alt': alt,
-            'bilirubin': bilirubin,
-            'albumin': albumin,
-            'inr': inr,
-            'platelets': platelets
-        }
-        st.markdown("""
-        <div class="data-saved">
-        ✅ <strong>Dados salvos com sucesso!</strong><br>
-        Os dados do paciente agora estão disponíveis para todas as calculadoras.
-        </div>
-        """, unsafe_allow_html=True)
+    st.markdown("""
+    <div class="data-saved">
+    ✅ <strong>Dados salvos automaticamente!</strong><br>
+    Os dados do paciente são atualizados em tempo real e estão disponíveis para todas as calculadoras.
+    </div>
+    """, unsafe_allow_html=True)
 
-# ========== TAB 2: ALL CALCULATORS ==========
+# ========== TAB 2: ALL CALCULATORS DASHBOARD ==========
 with tabs[1]:
-    st.header("🏥 Todas as Calculadoras")
-    st.markdown("Selecione uma calculadora abaixo para realizar o cálculo com os dados do paciente.")
+    st.header("🏥 Dashboard - Todas as Calculadoras")
+    st.markdown("**Resultados calculados automaticamente com base nos dados do paciente**")
     
     if not st.session_state.patient_data:
         st.warning("⚠️ Por favor, preencha os dados do paciente na aba 'Dados do Paciente' primeiro.")
-    
-    # Organize calculators by specialty
-    st.subheader("🫀 Cardiologia")
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        if st.button("PREVENT - Risco Cardiovascular"):
-            st.session_state.selected_calculator = 'prevent'
-    
-    st.markdown("---")
-    st.subheader("🍽️ Gastroenterologia")
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        if st.button("FIB-4 - Fibrose Hepática"):
-            st.session_state.selected_calculator = 'fib4'
-    with col2:
-        if st.button("MELD - Gravidade Hepática"):
-            st.session_state.selected_calculator = 'meld'
-    with col3:
-        if st.button("Child-Pugh - Cirrose"):
-            st.session_state.selected_calculator = 'childpugh'
-    
-    st.markdown("---")
-    st.subheader("💧 Nefrologia")
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        if st.button("eTFG - Taxa de Filtração Glomerular"):
-            st.session_state.selected_calculator = 'egfr'
-    with col2:
-        if st.button("Kt/V - Adequação da Diálise"):
-            st.session_state.selected_calculator = 'ktv'
-    
-    st.markdown("---")
-    st.subheader("🩺 Endocrinologia")
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        if st.button("IMC - Índice de Massa Corporal"):
-            st.session_state.selected_calculator = 'bmi'
-    with col2:
-        if st.button("HOMA-IR - Resistência Insulínica"):
-            st.session_state.selected_calculator = 'homa_ir'
-    with col3:
-        if st.button("HOMA-Beta - Função das Células Beta"):
-            st.session_state.selected_calculator = 'homa_beta'
+    else:
+        pd = st.session_state.patient_data
+        
+        # Helper function to render calculator cards
+        def render_calc_card(icon, title, subtitle, calc_func):
+            """Render a calculator card with automatic calculation"""
+            st.markdown(f"""
+                <div class="calculator-card">
+                    <div class="calc-header">
+                        <div class="calc-icon">{icon}</div>
+                        <div>
+                            <div class="calc-title">{title}</div>
+                            <div class="calc-subtitle">{subtitle}</div>
+                        </div>
+                    </div>
+                </div>
+            """, unsafe_allow_html=True)
+            
+            try:
+                result = calc_func()
+                return result
+            except Exception as e:
+                st.error(f"Erro: {str(e)}")
+                return None
+        
+        # ===== ENDOCRINOLOGY SECTION =====
+        st.markdown("### 🩺 Endocrinologia")
+        col1, col2, col3 = st.columns(3)
+        
+        with col1:
+            st.markdown("""
+                <div class="calculator-card">
+                    <div class="calc-header">
+                        <div class="calc-icon">📊</div>
+                        <div>
+                            <div class="calc-title">IMC</div>
+                            <div class="calc-subtitle">Índice de Massa Corporal</div>
+                        </div>
+                    </div>
+                </div>
+            """, unsafe_allow_html=True)
+            
+            try:
+                calculator = BMICalculator()
+                result = calculator.calculate(weight=pd['weight'], height=pd['height'])
+                col_a, col_b = st.columns(2)
+                with col_a:
+                    st.metric("IMC", result['bmi'])
+                with col_b:
+                    st.metric("Classificação", result['classification'])
+                st.info(f"**Risco:** {result['risk']}")
+            except Exception as e:
+                st.error(f"Erro: {str(e)}")
+        
+        with col2:
+            st.markdown("""
+                <div class="calculator-card">
+                    <div class="calc-header">
+                        <div class="calc-icon">🔬</div>
+                        <div>
+                            <div class="calc-title">HOMA-IR</div>
+                            <div class="calc-subtitle">Resistência Insulínica</div>
+                        </div>
+                    </div>
+                </div>
+            """, unsafe_allow_html=True)
+            
+            try:
+                calculator = HOMAIRCalculator()
+                result = calculator.calculate(
+                    fasting_glucose=pd['fasting_glucose'],
+                    fasting_insulin=pd['fasting_insulin']
+                )
+                st.metric("HOMA-IR", result['homa_ir'])
+                st.info(f"**{result['interpretation']}**")
+            except Exception as e:
+                st.error(f"Erro: {str(e)}")
+        
+        with col3:
+            st.markdown("""
+                <div class="calculator-card">
+                    <div class="calc-header">
+                        <div class="calc-icon">🧬</div>
+                        <div>
+                            <div class="calc-title">HOMA-Beta</div>
+                            <div class="calc-subtitle">Função Beta Células</div>
+                        </div>
+                    </div>
+                </div>
+            """, unsafe_allow_html=True)
+            
+            try:
+                calculator = HOMABetaCalculator()
+                result = calculator.calculate(
+                    fasting_glucose=pd['fasting_glucose'],
+                    fasting_insulin=pd['fasting_insulin']
+                )
+                st.metric("HOMA-Beta", f"{result['homa_beta']}%")
+                st.info(f"**{result['interpretation']}**")
+            except Exception as e:
+                st.error(f"Erro: {str(e)}")
+        
+        # ===== GASTROENTEROLOGY SECTION =====
+        st.markdown("---")
+        st.markdown("### 🍽️ Gastroenterologia")
+        col1, col2, col3 = st.columns(3)
+        
+        with col1:
+            st.markdown("""
+                <div class="calculator-card">
+                    <div class="calc-header">
+                        <div class="calc-icon">🔍</div>
+                        <div>
+                            <div class="calc-title">FIB-4</div>
+                            <div class="calc-subtitle">Fibrose Hepática</div>
+                        </div>
+                    </div>
+                </div>
+            """, unsafe_allow_html=True)
+            
+            try:
+                calculator = FIB4Calculator()
+                result = calculator.calculate(
+                    age=pd['age'],
+                    ast=pd['ast'],
+                    alt=pd['alt'],
+                    platelets=pd['platelets']
+                )
+                col_a, col_b = st.columns(2)
+                with col_a:
+                    st.metric("Score FIB-4", result['score'])
+                with col_b:
+                    st.metric("Risco", result['risk'])
+                st.info(f"**{result['interpretation']}**")
+            except Exception as e:
+                st.error(f"Erro: {str(e)}")
+        
+        with col2:
+            st.markdown("""
+                <div class="calculator-card">
+                    <div class="calc-header">
+                        <div class="calc-icon">⚕️</div>
+                        <div>
+                            <div class="calc-title">MELD</div>
+                            <div class="calc-subtitle">Gravidade Hepática</div>
+                        </div>
+                    </div>
+                </div>
+            """, unsafe_allow_html=True)
+            
+            try:
+                calculator = MELDCalculator()
+                result = calculator.calculate(
+                    creatinine=pd['creatinine'],
+                    bilirubin=pd['bilirubin'],
+                    inr=pd['inr'],
+                    dialysis=pd['dialysis']
+                )
+                st.metric("Score MELD", result['score'])
+                st.info(f"**{result['interpretation']}**")
+                st.warning(f"**{result['mortality']}**")
+            except Exception as e:
+                st.error(f"Erro: {str(e)}")
+        
+        with col3:
+            st.markdown("""
+                <div class="calculator-card">
+                    <div class="calc-header">
+                        <div class="calc-icon">🏥</div>
+                        <div>
+                            <div class="calc-title">Child-Pugh</div>
+                            <div class="calc-subtitle">Classificação de Cirrose</div>
+                        </div>
+                    </div>
+                </div>
+            """, unsafe_allow_html=True)
+            
+            # Child-Pugh requires additional inputs
+            ascites = st.selectbox("Ascite", ["Ausente", "Leve", "Moderada/Grave"], key="cp_ascites")
+            encephalopathy = st.selectbox("Encefalopatia", ["Ausente", "Grau 1-2", "Grau 3-4"], key="cp_enceph")
+            
+            try:
+                ascites_map = {"Ausente": "none", "Leve": "mild", "Moderada/Grave": "moderate_severe"}
+                enceph_map = {"Ausente": "none", "Grau 1-2": "grade_1_2", "Grau 3-4": "grade_3_4"}
+                
+                calculator = ChildPughCalculator()
+                result = calculator.calculate(
+                    bilirubin=pd['bilirubin'],
+                    albumin=pd['albumin'],
+                    inr=pd['inr'],
+                    ascites=ascites_map[ascites],
+                    encephalopathy=enceph_map[encephalopathy]
+                )
+                col_a, col_b = st.columns(2)
+                with col_a:
+                    st.metric("Score", result['score'])
+                with col_b:
+                    st.metric("Classe", result['class'])
+                st.info(f"**{result['interpretation']}**")
+            except Exception as e:
+                st.error(f"Erro: {str(e)}")
+        
+        # ===== NEPHROLOGY SECTION =====
+        st.markdown("---")
+        st.markdown("### 💧 Nefrologia")
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.markdown("""
+                <div class="calculator-card">
+                    <div class="calc-header">
+                        <div class="calc-icon">🫘</div>
+                        <div>
+                            <div class="calc-title">eTFG</div>
+                            <div class="calc-subtitle">Taxa de Filtração Glomerular</div>
+                        </div>
+                    </div>
+                </div>
+            """, unsafe_allow_html=True)
+            
+            try:
+                sex_code = 'M' if pd['sex'] == "Masculino" else 'F'
+                calculator = eGFRCalculator()
+                result = calculator.calculate(
+                    creatinine=pd['creatinine'],
+                    age=pd['age'],
+                    sex=sex_code
+                )
+                col_a, col_b = st.columns(2)
+                with col_a:
+                    st.metric("eTFG", f"{result['egfr']} mL/min/1.73m²")
+                with col_b:
+                    st.metric("Estágio DRC", result['stage'])
+                st.info(f"**{result['description']}**")
+            except Exception as e:
+                st.error(f"Erro: {str(e)}")
+        
+        with col2:
+            st.markdown("""
+                <div class="calculator-card">
+                    <div class="calc-header">
+                        <div class="calc-icon">💉</div>
+                        <div>
+                            <div class="calc-title">Kt/V</div>
+                            <div class="calc-subtitle">Adequação da Diálise</div>
+                        </div>
+                    </div>
+                </div>
+            """, unsafe_allow_html=True)
+            
+            # Kt/V requires additional dialysis-specific inputs
+            col_a, col_b = st.columns(2)
+            with col_a:
+                pre_bun = st.number_input("BUN pré-diálise (mg/dL)", min_value=1, max_value=300, value=60, step=1, key="ktv_pre")
+                post_bun = st.number_input("BUN pós-diálise (mg/dL)", min_value=1, max_value=200, value=20, step=1, key="ktv_post")
+            with col_b:
+                dialysis_time = st.number_input("Tempo de diálise (horas)", min_value=0.5, max_value=10.0, value=4.0, step=0.5, key="ktv_time")
+                ultrafiltration = st.number_input("Ultrafiltração (L)", min_value=0.0, max_value=10.0, value=2.0, step=0.1, key="ktv_uf")
+            
+            try:
+                calculator = KtVCalculator()
+                result = calculator.calculate(
+                    pre_bun=pre_bun,
+                    post_bun=post_bun,
+                    dialysis_time=dialysis_time,
+                    ultrafiltration=ultrafiltration,
+                    post_weight=pd['weight']
+                )
+                col_a, col_b = st.columns(2)
+                with col_a:
+                    st.metric("Kt/V", result['ktv'])
+                with col_b:
+                    st.metric("Adequação", result['adequacy'])
+                st.info(f"**{result['recommendation']}**")
+            except Exception as e:
+                st.error(f"Erro: {str(e)}")
+        
+        # ===== CARDIOLOGY SECTION =====
+        st.markdown("---")
+        st.markdown("### 🫀 Cardiologia")
+        
+        st.markdown("""
+            <div class="calculator-card">
+                <div class="calc-header">
+                    <div class="calc-icon">❤️</div>
+                    <div>
+                        <div class="calc-title">PREVENT</div>
+                        <div class="calc-subtitle">Risco Cardiovascular (AHA)</div>
+                    </div>
+                </div>
+            </div>
+        """, unsafe_allow_html=True)
+        
+        try:
+            sex_code = 'M' if pd['sex'] == "Masculino" else 'F'
+            calculator = PREVENTCalculator()
+            results = calculator.calculate_risk_score(
+                age=pd['age'],
+                sex=sex_code,
+                race='other',
+                total_cholesterol=pd['total_chol'],
+                hdl_cholesterol=pd['hdl_chol'],
+                sbp=pd['sbp'],
+                on_bp_meds=pd['on_bp_meds'],
+                diabetes=pd['diabetes'],
+                smoker=pd['smoker'],
+                egfr=pd['egfr'],
+                uacr=pd.get('uacr') if pd.get('uacr', 0) > 0 else None,
+                hba1c=pd.get('hba1c') if pd.get('hba1c', 0) > 0 else None
+            )
+            
+            # Display overall risk category
+            risk_class_map = {
+                'Baixo': 'risk-low',
+                'Limítrofe': 'risk-borderline',
+                'Intermediário': 'risk-intermediate',
+                'Alto': 'risk-high'
+            }
+            st.markdown(f"""
+                <div class="risk-box {risk_class_map[results['risk_category']]}">
+                    Categoria de Risco Geral: {results['risk_category'].upper()}
+                </div>
+            """, unsafe_allow_html=True)
+            
+            col1, col2, col3 = st.columns(3)
+            
+            with col1:
+                st.markdown("**📊 DCV Total**")
+                st.metric("10 anos", f"{results['total_cvd_10yr']}%")
+                st.metric("30 anos", f"{results['total_cvd_30yr']}%")
+            
+            with col2:
+                st.markdown("**🩺 DCVA (Aterosclerose)**")
+                st.metric("10 anos", f"{results['ascvd_10yr']}%")
+                st.metric("30 anos", f"{results['ascvd_30yr']}%")
+            
+            with col3:
+                st.markdown("**💔 Insuficiência Cardíaca**")
+                st.metric("10 anos", f"{results['hf_10yr']}%")
+                st.metric("30 anos", f"{results['hf_30yr']}%")
+            
+        except Exception as e:
+            st.error(f"Erro ao calcular PREVENT: {str(e)}")
+
 
 # ========== TAB 3: CARDIOLOGY ==========
 with tabs[2]:
     st.header("🫀 Cardiologia")
     
-    st.subheader("PREVENT - Risco Cardiovascular (AHA)")
+    st.markdown("""
+        <div class="calculator-card">
+            <div class="calc-header">
+                <div class="calc-icon">❤️</div>
+                <div>
+                    <div class="calc-title">PREVENT - Risco Cardiovascular (AHA)</div>
+                    <div class="calc-subtitle">Cálculo Automático Ativo</div>
+                </div>
+            </div>
+        </div>
+    """, unsafe_allow_html=True)
+    
     st.markdown("""
     <div class="info-box">
     <strong>PREVENT (Predicting Risk of cardiovascular disease EVENTs)</strong><br>
@@ -270,111 +664,110 @@ with tabs[2]:
     </div>
     """, unsafe_allow_html=True)
     
-    if st.button("🔬 Calcular Risco Cardiovascular", key="prevent_calc"):
-        if not st.session_state.patient_data:
-            st.error("❌ Por favor, preencha os dados do paciente primeiro.")
-        else:
-            try:
-                pd = st.session_state.patient_data
-                sex_code = 'M' if pd['sex'] == "Masculino" else 'F'
+    if not st.session_state.patient_data:
+        st.warning("⚠️ Por favor, preencha os dados do paciente na aba 'Dados do Paciente' primeiro.")
+    else:
+        try:
+            pd = st.session_state.patient_data
+            sex_code = 'M' if pd['sex'] == "Masculino" else 'F'
+            
+            calculator = PREVENTCalculator()
+            results = calculator.calculate_risk_score(
+                age=pd['age'],
+                sex=sex_code,
+                race='other',  # Default value
+                total_cholesterol=pd['total_chol'],
+                hdl_cholesterol=pd['hdl_chol'],
+                sbp=pd['sbp'],
+                on_bp_meds=pd['on_bp_meds'],
+                diabetes=pd['diabetes'],
+                smoker=pd['smoker'],
+                egfr=pd['egfr'],
+                uacr=pd.get('uacr') if pd.get('uacr', 0) > 0 else None,
+                hba1c=pd.get('hba1c') if pd.get('hba1c', 0) > 0 else None
+            )
+            
+            # Display overall risk category
+            risk_class_map = {
+                'Baixo': 'risk-low',
+                'Limítrofe': 'risk-borderline',
+                'Intermediário': 'risk-intermediate',
+                'Alto': 'risk-high'
+            }
+            st.markdown(f"""
+                <div class="risk-box {risk_class_map[results['risk_category']]}">
+                    Categoria de Risco Geral: {results['risk_category'].upper()}
+                </div>
+            """, unsafe_allow_html=True)
+            
+            st.markdown("---")
+            
+            # Section 1: Total CVD (Risco Geral)
+            st.subheader("📊 Doença Cardiovascular Total (DCV)")
+            st.markdown("*Risco de qualquer evento cardiovascular (infarto, AVC, insuficiência cardíaca, etc.)*")
+            col1, col2 = st.columns(2)
+            with col1:
+                st.metric("Risco em 10 anos", f"{results['total_cvd_10yr']}%")
+            with col2:
+                st.metric("Risco em 30 anos", f"{results['total_cvd_30yr']}%")
+            
+            st.markdown("---")
+            
+            # Section 2: ASCVD (Aterosclerose)
+            st.subheader("🩺 Doença Cardiovascular Aterosclerótica (DCVA)")
+            st.markdown("*Risco de infarto do miocárdio ou AVC isquêmico*")
+            col1, col2 = st.columns(2)
+            with col1:
+                st.metric("Risco em 10 anos", f"{results['ascvd_10yr']}%")
+            with col2:
+                st.metric("Risco em 30 anos", f"{results['ascvd_30yr']}%")
+            
+            st.markdown("---")
+            
+            # Section 3: Heart Failure
+            st.subheader("💔 Insuficiência Cardíaca")
+            st.markdown("*Risco de desenvolver insuficiência cardíaca congestiva*")
+            col1, col2 = st.columns(2)
+            with col1:
+                st.metric("Risco em 10 anos", f"{results['hf_10yr']}%")
+            with col2:
+                st.metric("Risco em 30 anos", f"{results['hf_30yr']}%")
+            
+            st.markdown("---")
+            
+            # Clinical recommendations
+            st.subheader("💊 Recomendações Clínicas")
+            recommendations = calculator.get_recommendations(
+                results['risk_category'], 
+                results['total_cvd_10yr']
+            )
+            for i, rec in enumerate(recommendations, 1):
+                st.markdown(f"**{i}.** {rec}")
+            
+            # Additional information about risk types
+            st.markdown("---")
+            st.info("""
+            **Interpretação dos Resultados:**
+            
+            **DCV Total (Doença Cardiovascular Total):**
+            - Inclui todos os eventos cardiovasculares: infarto, AVC, insuficiência cardíaca, morte cardiovascular
+            - É o risco mais abrangente e útil para decisões sobre prevenção primária
+            
+            **DCVA (Doença Cardiovascular Aterosclerótica):**
+            - Eventos causados por aterosclerose: infarto do miocárdio e AVC isquêmico
+            - Importante para decisões sobre terapia antiplaquetária e estatinas
+            
+            **Insuficiência Cardíaca:**
+            - Risco específico de desenvolver ICC
+            - Útil para identificar pacientes que podem se beneficiar de controle mais rigoroso da PA e uso de IECA/BRA
+            
+            **Nota:** Estas estimativas são baseadas nas equações oficiais PREVENT da AHA (Circulation 2023),
+            que incorporam função renal (eTFG) e marcadores metabólicos (uACR, HbA1c) para uma avaliação
+            mais precisa do risco cardiovascular.
+            """)
                 
-                calculator = PREVENTCalculator()
-                results = calculator.calculate_risk_score(
-                    age=pd['age'],
-                    sex=sex_code,
-                    race='other',  # Default value
-                    total_cholesterol=pd['total_chol'],
-                    hdl_cholesterol=pd['hdl_chol'],
-                    sbp=pd['sbp'],
-                    on_bp_meds=pd['on_bp_meds'],
-                    diabetes=pd['diabetes'],
-                    smoker=pd['smoker'],
-                    egfr=pd['egfr'],
-                    uacr=pd.get('uacr') if pd.get('uacr', 0) > 0 else None,
-                    hba1c=pd.get('hba1c') if pd.get('hba1c', 0) > 0 else None
-                )
-                
-                # Display overall risk category
-                risk_class_map = {
-                    'Baixo': 'risk-low',
-                    'Limítrofe': 'risk-borderline',
-                    'Intermediário': 'risk-intermediate',
-                    'Alto': 'risk-high'
-                }
-                st.markdown(f"""
-                    <div class="risk-box {risk_class_map[results['risk_category']]}">
-                        Categoria de Risco Geral: {results['risk_category'].upper()}
-                    </div>
-                """, unsafe_allow_html=True)
-                
-                st.markdown("---")
-                
-                # Section 1: Total CVD (Risco Geral)
-                st.subheader("📊 Doença Cardiovascular Total (DCV)")
-                st.markdown("*Risco de qualquer evento cardiovascular (infarto, AVC, insuficiência cardíaca, etc.)*")
-                col1, col2 = st.columns(2)
-                with col1:
-                    st.metric("Risco em 10 anos", f"{results['total_cvd_10yr']}%")
-                with col2:
-                    st.metric("Risco em 30 anos", f"{results['total_cvd_30yr']}%")
-                
-                st.markdown("---")
-                
-                # Section 2: ASCVD (Aterosclerose)
-                st.subheader("🩺 Doença Cardiovascular Aterosclerótica (DCVA)")
-                st.markdown("*Risco de infarto do miocárdio ou AVC isquêmico*")
-                col1, col2 = st.columns(2)
-                with col1:
-                    st.metric("Risco em 10 anos", f"{results['ascvd_10yr']}%")
-                with col2:
-                    st.metric("Risco em 30 anos", f"{results['ascvd_30yr']}%")
-                
-                st.markdown("---")
-                
-                # Section 3: Heart Failure
-                st.subheader("💔 Insuficiência Cardíaca")
-                st.markdown("*Risco de desenvolver insuficiência cardíaca congestiva*")
-                col1, col2 = st.columns(2)
-                with col1:
-                    st.metric("Risco em 10 anos", f"{results['hf_10yr']}%")
-                with col2:
-                    st.metric("Risco em 30 anos", f"{results['hf_30yr']}%")
-                
-                st.markdown("---")
-                
-                # Clinical recommendations
-                st.subheader("💊 Recomendações Clínicas")
-                recommendations = calculator.get_recommendations(
-                    results['risk_category'], 
-                    results['total_cvd_10yr']
-                )
-                for i, rec in enumerate(recommendations, 1):
-                    st.markdown(f"**{i}.** {rec}")
-                
-                # Additional information about risk types
-                st.markdown("---")
-                st.info("""
-                **Interpretação dos Resultados:**
-                
-                **DCV Total (Doença Cardiovascular Total):**
-                - Inclui todos os eventos cardiovasculares: infarto, AVC, insuficiência cardíaca, morte cardiovascular
-                - É o risco mais abrangente e útil para decisões sobre prevenção primária
-                
-                **DCVA (Doença Cardiovascular Aterosclerótica):**
-                - Eventos causados por aterosclerose: infarto do miocárdio e AVC isquêmico
-                - Importante para decisões sobre terapia antiplaquetária e estatinas
-                
-                **Insuficiência Cardíaca:**
-                - Risco específico de desenvolver ICC
-                - Útil para identificar pacientes que podem se beneficiar de controle mais rigoroso da PA e uso de IECA/BRA
-                
-                **Nota:** Estas estimativas são baseadas nas equações oficiais PREVENT da AHA (Circulation 2023),
-                que incorporam função renal (eTFG) e marcadores metabólicos (uACR, HbA1c) para uma avaliação
-                mais precisa do risco cardiovascular.
-                """)
-                    
-            except Exception as e:
-                st.error(f"Erro ao calcular: {str(e)}")
+        except Exception as e:
+            st.error(f"Erro ao calcular: {str(e)}")
 
 # ========== TAB 4: GASTROENTEROLOGY ==========
 with tabs[3]:
@@ -385,116 +778,138 @@ with tabs[3]:
         ["FIB-4 - Fibrose Hepática", "MELD - Gravidade Hepática", "Child-Pugh - Cirrose"]
     )
     
-    if calc_choice == "FIB-4 - Fibrose Hepática":
-        st.subheader("FIB-4 - Avaliação de Fibrose Hepática")
-        st.markdown("""
-        <div class="info-box">
-        O FIB-4 é usado para avaliar a probabilidade de fibrose hepática avançada.
-        </div>
-        """, unsafe_allow_html=True)
+    if not st.session_state.patient_data:
+        st.warning("⚠️ Por favor, preencha os dados do paciente na aba 'Dados do Paciente' primeiro.")
+    else:
+        pd = st.session_state.patient_data
         
-        if st.button("🔬 Calcular FIB-4", key="fib4_calc"):
-            if not st.session_state.patient_data:
-                st.error("❌ Por favor, preencha os dados do paciente primeiro.")
-            else:
-                try:
-                    pd = st.session_state.patient_data
-                    calculator = FIB4Calculator()
-                    result = calculator.calculate(
-                        age=pd['age'],
-                        ast=pd['ast'],
-                        alt=pd['alt'],
-                        platelets=pd['platelets']
-                    )
-                    
-                    col1, col2 = st.columns(2)
-                    with col1:
-                        st.metric("Score FIB-4", result['score'])
-                    with col2:
-                        st.metric("Risco", result['risk'])
-                    
-                    st.info(f"**Interpretação:** {result['interpretation']}")
-                except Exception as e:
-                    st.error(f"Erro ao calcular: {str(e)}")
-    
-    elif calc_choice == "MELD - Gravidade Hepática":
-        st.subheader("MELD - Model for End-Stage Liver Disease")
-        st.markdown("""
-        <div class="info-box">
-        O MELD é usado para priorização de transplante hepático e avaliação de gravidade.
-        </div>
-        """, unsafe_allow_html=True)
+        if calc_choice == "FIB-4 - Fibrose Hepática":
+            st.markdown("""
+                <div class="calculator-card">
+                    <div class="calc-header">
+                        <div class="calc-icon">🔍</div>
+                        <div>
+                            <div class="calc-title">FIB-4</div>
+                            <div class="calc-subtitle">Avaliação de Fibrose Hepática - Cálculo Automático</div>
+                        </div>
+                    </div>
+                </div>
+            """, unsafe_allow_html=True)
+            
+            st.markdown("""
+            <div class="info-box">
+            O FIB-4 é usado para avaliar a probabilidade de fibrose hepática avançada.
+            </div>
+            """, unsafe_allow_html=True)
+            
+            try:
+                calculator = FIB4Calculator()
+                result = calculator.calculate(
+                    age=pd['age'],
+                    ast=pd['ast'],
+                    alt=pd['alt'],
+                    platelets=pd['platelets']
+                )
+                
+                col1, col2 = st.columns(2)
+                with col1:
+                    st.metric("Score FIB-4", result['score'])
+                with col2:
+                    st.metric("Risco", result['risk'])
+                
+                st.info(f"**Interpretação:** {result['interpretation']}")
+            except Exception as e:
+                st.error(f"Erro ao calcular: {str(e)}")
         
-        if st.button("🔬 Calcular MELD", key="meld_calc"):
-            if not st.session_state.patient_data:
-                st.error("❌ Por favor, preencha os dados do paciente primeiro.")
-            else:
-                try:
-                    pd = st.session_state.patient_data
-                    calculator = MELDCalculator()
-                    result = calculator.calculate(
-                        creatinine=pd['creatinine'],
-                        bilirubin=pd['bilirubin'],
-                        inr=pd['inr'],
-                        dialysis=pd['dialysis']
-                    )
-                    
-                    col1, col2 = st.columns(2)
-                    with col1:
-                        st.metric("Score MELD", result['score'])
-                    with col2:
-                        st.info(f"**{result['interpretation']}**")
-                    
-                    st.warning(f"**Mortalidade:** {result['mortality']}")
-                except Exception as e:
-                    st.error(f"Erro ao calcular: {str(e)}")
-    
-    else:  # Child-Pugh
-        st.subheader("Child-Pugh - Classificação de Cirrose")
-        st.markdown("""
-        <div class="info-box">
-        O Child-Pugh classifica a gravidade da cirrose hepática.
-        </div>
-        """, unsafe_allow_html=True)
+        elif calc_choice == "MELD - Gravidade Hepática":
+            st.markdown("""
+                <div class="calculator-card">
+                    <div class="calc-header">
+                        <div class="calc-icon">⚕️</div>
+                        <div>
+                            <div class="calc-title">MELD</div>
+                            <div class="calc-subtitle">Model for End-Stage Liver Disease - Cálculo Automático</div>
+                        </div>
+                    </div>
+                </div>
+            """, unsafe_allow_html=True)
+            
+            st.markdown("""
+            <div class="info-box">
+            O MELD é usado para priorização de transplante hepático e avaliação de gravidade.
+            </div>
+            """, unsafe_allow_html=True)
+            
+            try:
+                calculator = MELDCalculator()
+                result = calculator.calculate(
+                    creatinine=pd['creatinine'],
+                    bilirubin=pd['bilirubin'],
+                    inr=pd['inr'],
+                    dialysis=pd['dialysis']
+                )
+                
+                col1, col2 = st.columns(2)
+                with col1:
+                    st.metric("Score MELD", result['score'])
+                with col2:
+                    st.info(f"**{result['interpretation']}**")
+                
+                st.warning(f"**Mortalidade:** {result['mortality']}")
+            except Exception as e:
+                st.error(f"Erro ao calcular: {str(e)}")
         
-        col1, col2 = st.columns(2)
-        with col1:
-            ascites = st.selectbox("Ascite", ["Ausente", "Leve", "Moderada/Grave"])
-        with col2:
-            encephalopathy = st.selectbox("Encefalopatia", ["Ausente", "Grau 1-2", "Grau 3-4"])
-        
-        if st.button("🔬 Calcular Child-Pugh", key="childpugh_calc"):
-            if not st.session_state.patient_data:
-                st.error("❌ Por favor, preencha os dados do paciente primeiro.")
-            else:
-                try:
-                    pd = st.session_state.patient_data
-                    
-                    # Map selections
-                    ascites_map = {"Ausente": "none", "Leve": "mild", "Moderada/Grave": "moderate_severe"}
-                    enceph_map = {"Ausente": "none", "Grau 1-2": "grade_1_2", "Grau 3-4": "grade_3_4"}
-                    
-                    calculator = ChildPughCalculator()
-                    result = calculator.calculate(
-                        bilirubin=pd['bilirubin'],
-                        albumin=pd['albumin'],
-                        inr=pd['inr'],
-                        ascites=ascites_map[ascites],
-                        encephalopathy=enceph_map[encephalopathy]
-                    )
-                    
-                    col1, col2, col3 = st.columns(3)
-                    with col1:
-                        st.metric("Score", result['score'])
-                    with col2:
-                        st.metric("Classe", result['class'])
-                    with col3:
-                        st.info(f"**{result['interpretation']}**")
-                    
-                    st.markdown(f"**Sobrevida em 1 ano:** {result['survival_1_year']}")
-                    st.markdown(f"**Sobrevida em 2 anos:** {result['survival_2_year']}")
-                except Exception as e:
-                    st.error(f"Erro ao calcular: {str(e)}")
+        else:  # Child-Pugh
+            st.markdown("""
+                <div class="calculator-card">
+                    <div class="calc-header">
+                        <div class="calc-icon">🏥</div>
+                        <div>
+                            <div class="calc-title">Child-Pugh</div>
+                            <div class="calc-subtitle">Classificação de Cirrose - Cálculo Automático</div>
+                        </div>
+                    </div>
+                </div>
+            """, unsafe_allow_html=True)
+            
+            st.markdown("""
+            <div class="info-box">
+            O Child-Pugh classifica a gravidade da cirrose hepática.
+            </div>
+            """, unsafe_allow_html=True)
+            
+            col1, col2 = st.columns(2)
+            with col1:
+                ascites = st.selectbox("Ascite", ["Ausente", "Leve", "Moderada/Grave"], key="gastro_ascites")
+            with col2:
+                encephalopathy = st.selectbox("Encefalopatia", ["Ausente", "Grau 1-2", "Grau 3-4"], key="gastro_enceph")
+            
+            try:
+                # Map selections
+                ascites_map = {"Ausente": "none", "Leve": "mild", "Moderada/Grave": "moderate_severe"}
+                enceph_map = {"Ausente": "none", "Grau 1-2": "grade_1_2", "Grau 3-4": "grade_3_4"}
+                
+                calculator = ChildPughCalculator()
+                result = calculator.calculate(
+                    bilirubin=pd['bilirubin'],
+                    albumin=pd['albumin'],
+                    inr=pd['inr'],
+                    ascites=ascites_map[ascites],
+                    encephalopathy=enceph_map[encephalopathy]
+                )
+                
+                col1, col2, col3 = st.columns(3)
+                with col1:
+                    st.metric("Score", result['score'])
+                with col2:
+                    st.metric("Classe", result['class'])
+                with col3:
+                    st.info(f"**{result['interpretation']}**")
+                
+                st.markdown(f"**Sobrevida em 1 ano:** {result['survival_1_year']}")
+                st.markdown(f"**Sobrevida em 2 anos:** {result['survival_2_year']}")
+            except Exception as e:
+                st.error(f"Erro ao calcular: {str(e)}")
 
 # ========== TAB 5: NEPHROLOGY ==========
 with tabs[4]:
@@ -506,81 +921,97 @@ with tabs[4]:
         key="nephro_choice"
     )
     
-    if calc_choice == "eTFG - Taxa de Filtração Glomerular":
-        st.subheader("eTFG - Estimativa da Taxa de Filtração Glomerular")
-        st.markdown("""
-        <div class="info-box">
-        Cálculo usando equação CKD-EPI 2021 (sem ajuste racial).
-        </div>
-        """, unsafe_allow_html=True)
+    if not st.session_state.patient_data:
+        st.warning("⚠️ Por favor, preencha os dados do paciente na aba 'Dados do Paciente' primeiro.")
+    else:
+        pd = st.session_state.patient_data
         
-        if st.button("🔬 Calcular eTFG", key="egfr_calc"):
-            if not st.session_state.patient_data:
-                st.error("❌ Por favor, preencha os dados do paciente primeiro.")
-            else:
-                try:
-                    pd = st.session_state.patient_data
-                    sex_code = 'M' if pd['sex'] == "Masculino" else 'F'
-                    
-                    calculator = eGFRCalculator()
-                    result = calculator.calculate(
-                        creatinine=pd['creatinine'],
-                        age=pd['age'],
-                        sex=sex_code
-                    )
-                    
-                    col1, col2 = st.columns(2)
-                    with col1:
-                        st.metric("eTFG", f"{result['egfr']} mL/min/1.73m²")
-                    with col2:
-                        st.metric("Estágio DRC", result['stage'])
-                    
-                    st.info(f"**{result['description']}**")
-                except Exception as e:
-                    st.error(f"Erro ao calcular: {str(e)}")
-    
-    else:  # Kt/V
-        st.subheader("Kt/V - Adequação da Diálise")
-        st.markdown("""
-        <div class="info-box">
-        Avalia a adequação da hemodiálise usando fórmula de Daugirdas II.
-        </div>
-        """, unsafe_allow_html=True)
+        if calc_choice == "eTFG - Taxa de Filtração Glomerular":
+            st.markdown("""
+                <div class="calculator-card">
+                    <div class="calc-header">
+                        <div class="calc-icon">🫘</div>
+                        <div>
+                            <div class="calc-title">eTFG</div>
+                            <div class="calc-subtitle">Estimativa da Taxa de Filtração Glomerular - Cálculo Automático</div>
+                        </div>
+                    </div>
+                </div>
+            """, unsafe_allow_html=True)
+            
+            st.markdown("""
+            <div class="info-box">
+            Cálculo usando equação CKD-EPI 2021 (sem ajuste racial).
+            </div>
+            """, unsafe_allow_html=True)
+            
+            try:
+                sex_code = 'M' if pd['sex'] == "Masculino" else 'F'
+                
+                calculator = eGFRCalculator()
+                result = calculator.calculate(
+                    creatinine=pd['creatinine'],
+                    age=pd['age'],
+                    sex=sex_code
+                )
+                
+                col1, col2 = st.columns(2)
+                with col1:
+                    st.metric("eTFG", f"{result['egfr']} mL/min/1.73m²")
+                with col2:
+                    st.metric("Estágio DRC", result['stage'])
+                
+                st.info(f"**{result['description']}**")
+            except Exception as e:
+                st.error(f"Erro ao calcular: {str(e)}")
         
-        col1, col2, col3 = st.columns(3)
-        with col1:
-            pre_bun = st.number_input("BUN pré-diálise (mg/dL)", min_value=1, max_value=300, value=60, step=1)
-            post_bun = st.number_input("BUN pós-diálise (mg/dL)", min_value=1, max_value=200, value=20, step=1)
-        with col2:
-            dialysis_time = st.number_input("Tempo de diálise (horas)", min_value=0.5, max_value=10.0, value=4.0, step=0.5)
-        with col3:
-            ultrafiltration = st.number_input("Ultrafiltração (L)", min_value=0.0, max_value=10.0, value=2.0, step=0.1)
-        
-        if st.button("🔬 Calcular Kt/V", key="ktv_calc"):
-            if not st.session_state.patient_data:
-                st.error("❌ Por favor, preencha os dados do paciente primeiro.")
-            else:
-                try:
-                    pd = st.session_state.patient_data
-                    
-                    calculator = KtVCalculator()
-                    result = calculator.calculate(
-                        pre_bun=pre_bun,
-                        post_bun=post_bun,
-                        dialysis_time=dialysis_time,
-                        ultrafiltration=ultrafiltration,
-                        post_weight=pd['weight']
-                    )
-                    
-                    col1, col2 = st.columns(2)
-                    with col1:
-                        st.metric("Kt/V", result['ktv'])
-                    with col2:
-                        st.metric("Adequação", result['adequacy'])
-                    
-                    st.info(f"**Recomendação:** {result['recommendation']}")
-                except Exception as e:
-                    st.error(f"Erro ao calcular: {str(e)}")
+        else:  # Kt/V
+            st.markdown("""
+                <div class="calculator-card">
+                    <div class="calc-header">
+                        <div class="calc-icon">💉</div>
+                        <div>
+                            <div class="calc-title">Kt/V</div>
+                            <div class="calc-subtitle">Adequação da Diálise - Cálculo Automático</div>
+                        </div>
+                    </div>
+                </div>
+            """, unsafe_allow_html=True)
+            
+            st.markdown("""
+            <div class="info-box">
+            Avalia a adequação da hemodiálise usando fórmula de Daugirdas II.
+            </div>
+            """, unsafe_allow_html=True)
+            
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                pre_bun = st.number_input("BUN pré-diálise (mg/dL)", min_value=1, max_value=300, value=60, step=1, key="nephro_pre_bun")
+                post_bun = st.number_input("BUN pós-diálise (mg/dL)", min_value=1, max_value=200, value=20, step=1, key="nephro_post_bun")
+            with col2:
+                dialysis_time = st.number_input("Tempo de diálise (horas)", min_value=0.5, max_value=10.0, value=4.0, step=0.5, key="nephro_time")
+            with col3:
+                ultrafiltration = st.number_input("Ultrafiltração (L)", min_value=0.0, max_value=10.0, value=2.0, step=0.1, key="nephro_uf")
+            
+            try:
+                calculator = KtVCalculator()
+                result = calculator.calculate(
+                    pre_bun=pre_bun,
+                    post_bun=post_bun,
+                    dialysis_time=dialysis_time,
+                    ultrafiltration=ultrafiltration,
+                    post_weight=pd['weight']
+                )
+                
+                col1, col2 = st.columns(2)
+                with col1:
+                    st.metric("Kt/V", result['ktv'])
+                with col2:
+                    st.metric("Adequação", result['adequacy'])
+                
+                st.info(f"**Recomendação:** {result['recommendation']}")
+            except Exception as e:
+                st.error(f"Erro ao calcular: {str(e)}")
 
 # ========== TAB 6: ENDOCRINOLOGY ==========
 with tabs[5]:
@@ -592,98 +1023,118 @@ with tabs[5]:
         key="endo_choice"
     )
     
-    if calc_choice == "IMC - Índice de Massa Corporal":
-        st.subheader("IMC - Índice de Massa Corporal")
-        st.markdown("""
-        <div class="info-box">
-        Classificação de peso corporal segundo OMS.
-        </div>
-        """, unsafe_allow_html=True)
+    if not st.session_state.patient_data:
+        st.warning("⚠️ Por favor, preencha os dados do paciente na aba 'Dados do Paciente' primeiro.")
+    else:
+        pd = st.session_state.patient_data
         
-        if st.button("🔬 Calcular IMC", key="bmi_calc"):
-            if not st.session_state.patient_data:
-                st.error("❌ Por favor, preencha os dados do paciente primeiro.")
-            else:
-                try:
-                    pd = st.session_state.patient_data
-                    
-                    calculator = BMICalculator()
-                    result = calculator.calculate(
-                        weight=pd['weight'],
-                        height=pd['height']
-                    )
-                    
-                    col1, col2, col3 = st.columns(3)
-                    with col1:
-                        st.metric("IMC", result['bmi'])
-                    with col2:
-                        st.metric("Classificação", result['classification'])
-                    with col3:
-                        st.metric("Risco", result['risk'])
-                except Exception as e:
-                    st.error(f"Erro ao calcular: {str(e)}")
-    
-    elif calc_choice == "HOMA-IR - Resistência Insulínica":
-        st.subheader("HOMA-IR - Avaliação de Resistência Insulínica")
-        st.markdown("""
-        <div class="info-box">
-        Modelo homeostático para avaliar resistência à insulina.
-        </div>
-        """, unsafe_allow_html=True)
+        if calc_choice == "IMC - Índice de Massa Corporal":
+            st.markdown("""
+                <div class="calculator-card">
+                    <div class="calc-header">
+                        <div class="calc-icon">📊</div>
+                        <div>
+                            <div class="calc-title">IMC</div>
+                            <div class="calc-subtitle">Índice de Massa Corporal - Cálculo Automático</div>
+                        </div>
+                    </div>
+                </div>
+            """, unsafe_allow_html=True)
+            
+            st.markdown("""
+            <div class="info-box">
+            Classificação de peso corporal segundo OMS.
+            </div>
+            """, unsafe_allow_html=True)
+            
+            try:
+                calculator = BMICalculator()
+                result = calculator.calculate(
+                    weight=pd['weight'],
+                    height=pd['height']
+                )
+                
+                col1, col2, col3 = st.columns(3)
+                with col1:
+                    st.metric("IMC", result['bmi'])
+                with col2:
+                    st.metric("Classificação", result['classification'])
+                with col3:
+                    st.metric("Risco", result['risk'])
+            except Exception as e:
+                st.error(f"Erro ao calcular: {str(e)}")
         
-        if st.button("🔬 Calcular HOMA-IR", key="homa_ir_calc"):
-            if not st.session_state.patient_data:
-                st.error("❌ Por favor, preencha os dados do paciente primeiro.")
-            else:
-                try:
-                    pd = st.session_state.patient_data
-                    
-                    calculator = HOMAIRCalculator()
-                    result = calculator.calculate(
-                        fasting_glucose=pd['fasting_glucose'],
-                        fasting_insulin=pd['fasting_insulin']
-                    )
-                    
-                    col1, col2 = st.columns(2)
-                    with col1:
-                        st.metric("HOMA-IR", result['homa_ir'])
-                    with col2:
-                        st.info(f"**{result['interpretation']}**")
-                    
-                    st.markdown(f"**Recomendação:** {result['recommendation']}")
-                except Exception as e:
-                    st.error(f"Erro ao calcular: {str(e)}")
-    
-    else:  # HOMA-Beta
-        st.subheader("HOMA-Beta - Avaliação da Função das Células Beta")
-        st.markdown("""
-        <div class="info-box">
-        Modelo homeostático para avaliar função pancreática (células beta).
-        </div>
-        """, unsafe_allow_html=True)
+        elif calc_choice == "HOMA-IR - Resistência Insulínica":
+            st.markdown("""
+                <div class="calculator-card">
+                    <div class="calc-header">
+                        <div class="calc-icon">🔬</div>
+                        <div>
+                            <div class="calc-title">HOMA-IR</div>
+                            <div class="calc-subtitle">Avaliação de Resistência Insulínica - Cálculo Automático</div>
+                        </div>
+                    </div>
+                </div>
+            """, unsafe_allow_html=True)
+            
+            st.markdown("""
+            <div class="info-box">
+            Modelo homeostático para avaliar resistência à insulina.
+            </div>
+            """, unsafe_allow_html=True)
+            
+            try:
+                calculator = HOMAIRCalculator()
+                result = calculator.calculate(
+                    fasting_glucose=pd['fasting_glucose'],
+                    fasting_insulin=pd['fasting_insulin']
+                )
+                
+                col1, col2 = st.columns(2)
+                with col1:
+                    st.metric("HOMA-IR", result['homa_ir'])
+                with col2:
+                    st.info(f"**{result['interpretation']}**")
+                
+                st.markdown(f"**Recomendação:** {result['recommendation']}")
+            except Exception as e:
+                st.error(f"Erro ao calcular: {str(e)}")
         
-        if st.button("🔬 Calcular HOMA-Beta", key="homa_beta_calc"):
-            if not st.session_state.patient_data:
-                st.error("❌ Por favor, preencha os dados do paciente primeiro.")
-            else:
-                try:
-                    pd = st.session_state.patient_data
-                    
-                    calculator = HOMABetaCalculator()
-                    result = calculator.calculate(
-                        fasting_glucose=pd['fasting_glucose'],
-                        fasting_insulin=pd['fasting_insulin']
-                    )
-                    
-                    col1, col2 = st.columns(2)
-                    with col1:
-                        st.metric("HOMA-Beta", f"{result['homa_beta']}%")
-                    with col2:
-                        st.info(f"**{result['interpretation']}**")
-                    
-                    st.markdown(f"**Recomendação:** {result['recommendation']}")
-                except Exception as e:
-                    st.error(f"Erro ao calcular: {str(e)}")
+        else:  # HOMA-Beta
+            st.markdown("""
+                <div class="calculator-card">
+                    <div class="calc-header">
+                        <div class="calc-icon">🧬</div>
+                        <div>
+                            <div class="calc-title">HOMA-Beta</div>
+                            <div class="calc-subtitle">Avaliação da Função das Células Beta - Cálculo Automático</div>
+                        </div>
+                    </div>
+                </div>
+            """, unsafe_allow_html=True)
+            
+            st.markdown("""
+            <div class="info-box">
+            Modelo homeostático para avaliar função pancreática (células beta).
+            </div>
+            """, unsafe_allow_html=True)
+            
+            try:
+                calculator = HOMABetaCalculator()
+                result = calculator.calculate(
+                    fasting_glucose=pd['fasting_glucose'],
+                    fasting_insulin=pd['fasting_insulin']
+                )
+                
+                col1, col2 = st.columns(2)
+                with col1:
+                    st.metric("HOMA-Beta", f"{result['homa_beta']}%")
+                with col2:
+                    st.info(f"**{result['interpretation']}**")
+                
+                st.markdown(f"**Recomendação:** {result['recommendation']}")
+            except Exception as e:
+                st.error(f"Erro ao calcular: {str(e)}")
 
 # Footer
 st.markdown("---")
