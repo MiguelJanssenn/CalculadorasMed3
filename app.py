@@ -81,6 +81,24 @@ st.markdown("""
         border-left: 3px solid #667eea;
     }
     
+    /* Status badges */
+    .status-badge {
+        display: inline-block;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        margin-left: 0.5rem;
+    }
+    .status-ready {
+        background: #d4edda;
+        color: #155724;
+    }
+    .status-missing {
+        background: #fff3cd;
+        color: #856404;
+    }
+    
     .stButton>button {
         width: 100%;
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -361,17 +379,48 @@ with tabs[1]:
                 st.error(f"Erro: {str(e)}")
                 return None
         
+        # Check calculator availability
+        calc_availability = {
+            'IMC': has_valid_data({'weight': 1.0, 'height': 50.0})[0],
+            'HOMA-IR': has_valid_data({'fasting_glucose': 30, 'fasting_insulin': 0.1})[0],
+            'HOMA-Beta': has_valid_data({'fasting_glucose': 30, 'fasting_insulin': 0.1})[0],
+            'FIB-4': has_valid_data({'age': 1, 'ast': 1, 'alt': 1, 'platelets': 1})[0],
+            'MELD': has_valid_data({'creatinine': 0.1, 'bilirubin': 0.1, 'inr': 0.8})[0],
+            'Child-Pugh': has_valid_data({'bilirubin': 0.1, 'albumin': 1.0, 'inr': 0.8})[0],
+            'eTFG': has_valid_data({'creatinine': 0.1, 'age': 1})[0],
+            'Kt/V': has_valid_data({'weight': 1.0})[0],
+            'PREVENT': has_valid_data({'age': 1, 'sbp': 70, 'total_chol': 50, 'hdl_chol': 10, 'egfr': 5})[0]
+        }
+        
+        # Display availability summary
+        ready_count = sum(calc_availability.values())
+        total_count = len(calc_availability)
+        
+        st.markdown(f"""
+        <div class="info-box">
+        <strong>Status das Calculadoras:</strong> {ready_count} de {total_count} calculadoras podem ser executadas com os dados atuais<br>
+        ✅ <strong>Prontas:</strong> {', '.join([k for k, v in calc_availability.items() if v])}<br>
+        ⚠️ <strong>Faltam dados:</strong> {', '.join([k for k, v in calc_availability.items() if not v])}
+        </div>
+        """, unsafe_allow_html=True)
+        
+        st.markdown("---")
+        
         # ===== ENDOCRINOLOGY SECTION =====
         st.markdown("### 🩺 Endocrinologia")
         col1, col2, col3 = st.columns(3)
         
         with col1:
-            st.markdown("""
+            # Check availability
+            is_available = calc_availability.get('IMC', False)
+            status_badge = '<span class="status-badge status-ready">✅ Pronto</span>' if is_available else '<span class="status-badge status-missing">⚠️ Falta dados</span>'
+            
+            st.markdown(f"""
                 <div class="calculator-card">
                     <div class="calc-header">
                         <div class="calc-icon">📊</div>
                         <div>
-                            <div class="calc-title">IMC</div>
+                            <div class="calc-title">IMC {status_badge}</div>
                             <div class="calc-subtitle">Índice de Massa Corporal</div>
                         </div>
                     </div>
@@ -402,12 +451,16 @@ with tabs[1]:
                     st.error(f"Erro: {str(e)}")
         
         with col2:
-            st.markdown("""
+            # Check availability
+            is_available = calc_availability.get('HOMA-IR', False)
+            status_badge = '<span class="status-badge status-ready">✅ Pronto</span>' if is_available else '<span class="status-badge status-missing">⚠️ Falta dados</span>'
+            
+            st.markdown(f"""
                 <div class="calculator-card">
                     <div class="calc-header">
                         <div class="calc-icon">🔬</div>
                         <div>
-                            <div class="calc-title">HOMA-IR</div>
+                            <div class="calc-title">HOMA-IR {status_badge}</div>
                             <div class="calc-subtitle">Resistência Insulínica</div>
                         </div>
                     </div>
@@ -437,12 +490,16 @@ with tabs[1]:
                     st.error(f"Erro: {str(e)}")
         
         with col3:
-            st.markdown("""
+            # Check availability
+            is_available = calc_availability.get('HOMA-Beta', False)
+            status_badge = '<span class="status-badge status-ready">✅ Pronto</span>' if is_available else '<span class="status-badge status-missing">⚠️ Falta dados</span>'
+            
+            st.markdown(f"""
                 <div class="calculator-card">
                     <div class="calc-header">
                         <div class="calc-icon">🧬</div>
                         <div>
-                            <div class="calc-title">HOMA-Beta</div>
+                            <div class="calc-title">HOMA-Beta {status_badge}</div>
                             <div class="calc-subtitle">Função Beta Células</div>
                         </div>
                     </div>
@@ -477,12 +534,16 @@ with tabs[1]:
         col1, col2, col3 = st.columns(3)
         
         with col1:
-            st.markdown("""
+            # Check availability
+            is_available = calc_availability.get('FIB-4', False)
+            status_badge = '<span class="status-badge status-ready">✅ Pronto</span>' if is_available else '<span class="status-badge status-missing">⚠️ Falta dados</span>'
+            
+            st.markdown(f"""
                 <div class="calculator-card">
                     <div class="calc-header">
                         <div class="calc-icon">🔍</div>
                         <div>
-                            <div class="calc-title">FIB-4</div>
+                            <div class="calc-title">FIB-4 {status_badge}</div>
                             <div class="calc-subtitle">Fibrose Hepática</div>
                         </div>
                     </div>
@@ -518,12 +579,16 @@ with tabs[1]:
                     st.error(f"Erro: {str(e)}")
         
         with col2:
-            st.markdown("""
+            # Check availability
+            is_available = calc_availability.get('MELD', False)
+            status_badge = '<span class="status-badge status-ready">✅ Pronto</span>' if is_available else '<span class="status-badge status-missing">⚠️ Falta dados</span>'
+            
+            st.markdown(f"""
                 <div class="calculator-card">
                     <div class="calc-header">
                         <div class="calc-icon">⚕️</div>
                         <div>
-                            <div class="calc-title">MELD</div>
+                            <div class="calc-title">MELD {status_badge}</div>
                             <div class="calc-subtitle">Gravidade Hepática</div>
                         </div>
                     </div>
@@ -556,12 +621,16 @@ with tabs[1]:
                     st.error(f"Erro: {str(e)}")
         
         with col3:
-            st.markdown("""
+            # Check availability
+            is_available = calc_availability.get('Child-Pugh', False)
+            status_badge = '<span class="status-badge status-ready">✅ Pronto</span>' if is_available else '<span class="status-badge status-missing">⚠️ Falta dados</span>'
+            
+            st.markdown(f"""
                 <div class="calculator-card">
                     <div class="calc-header">
                         <div class="calc-icon">🏥</div>
                         <div>
-                            <div class="calc-title">Child-Pugh</div>
+                            <div class="calc-title">Child-Pugh {status_badge}</div>
                             <div class="calc-subtitle">Classificação de Cirrose</div>
                         </div>
                     </div>
@@ -610,12 +679,16 @@ with tabs[1]:
         col1, col2 = st.columns(2)
         
         with col1:
-            st.markdown("""
+            # Check availability
+            is_available = calc_availability.get('eTFG', False)
+            status_badge = '<span class="status-badge status-ready">✅ Pronto</span>' if is_available else '<span class="status-badge status-missing">⚠️ Falta dados</span>'
+            
+            st.markdown(f"""
                 <div class="calculator-card">
                     <div class="calc-header">
                         <div class="calc-icon">🫘</div>
                         <div>
-                            <div class="calc-title">eTFG</div>
+                            <div class="calc-title">eTFG {status_badge}</div>
                             <div class="calc-subtitle">Taxa de Filtração Glomerular</div>
                         </div>
                     </div>
@@ -651,12 +724,16 @@ with tabs[1]:
                     st.error(f"Erro: {str(e)}")
         
         with col2:
-            st.markdown("""
+            # Check availability
+            is_available = calc_availability.get('Kt/V', False)
+            status_badge = '<span class="status-badge status-ready">✅ Pronto</span>' if is_available else '<span class="status-badge status-missing">⚠️ Falta dados</span>'
+            
+            st.markdown(f"""
                 <div class="calculator-card">
                     <div class="calc-header">
                         <div class="calc-icon">💉</div>
                         <div>
-                            <div class="calc-title">Kt/V</div>
+                            <div class="calc-title">Kt/V {status_badge}</div>
                             <div class="calc-subtitle">Adequação da Diálise</div>
                         </div>
                     </div>
@@ -704,12 +781,16 @@ with tabs[1]:
         st.markdown("---")
         st.markdown("### 🫀 Cardiologia")
         
-        st.markdown("""
+        # Check availability
+        is_available = calc_availability.get('PREVENT', False)
+        status_badge = '<span class="status-badge status-ready">✅ Pronto</span>' if is_available else '<span class="status-badge status-missing">⚠️ Falta dados</span>'
+        
+        st.markdown(f"""
             <div class="calculator-card">
                 <div class="calc-header">
                     <div class="calc-icon">❤️</div>
                     <div>
-                        <div class="calc-title">PREVENT</div>
+                        <div class="calc-title">PREVENT {status_badge}</div>
                         <div class="calc-subtitle">Risco Cardiovascular (AHA)</div>
                     </div>
                 </div>
