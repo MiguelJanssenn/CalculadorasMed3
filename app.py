@@ -67,8 +67,36 @@ st.markdown("""
         padding: 0.5rem 1rem;
         border-radius: 8px;
         font-weight: 600;
-        font-size: 1.1rem;
+        font-size: 0.9rem;
         margin: 0.5rem 0;
+    }
+    
+    /* Classification box inside cards */
+    .classification-box {
+        background: #f8f9fa;
+        padding: 0.75rem;
+        border-radius: 8px;
+        margin-top: 0.5rem;
+        font-size: 0.875rem;
+        border-left: 3px solid #667eea;
+    }
+    
+    /* Status badges */
+    .status-badge {
+        display: inline-block;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        margin-left: 0.5rem;
+    }
+    .status-ready {
+        background: #d4edda;
+        color: #155724;
+    }
+    .status-missing {
+        background: #fff3cd;
+        color: #856404;
     }
     
     .stButton>button {
@@ -91,7 +119,7 @@ st.markdown("""
         border-radius: 12px;
         margin: 1rem 0;
         text-align: center;
-        font-size: 1.2rem;
+        font-size: 1rem;
         font-weight: bold;
         box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     }
@@ -193,14 +221,17 @@ with tabs[0]:
     
     with col1:
         st.subheader("Dados Demográficos")
+        # Note: Default values are set to minimum values (not realistic patient values)
+        # This ensures the form starts empty, requiring conscious input from the user.
+        # This addresses requirement #3: page should load without pre-filled data.
         age = st.number_input("Idade (anos)", min_value=1, max_value=120, 
-                             value=st.session_state.patient_data.get('age', 55), step=1)
+                             value=st.session_state.patient_data.get('age', 1), step=1)
         sex = st.selectbox("Sexo", ["Masculino", "Feminino"],
                           index=0 if st.session_state.patient_data.get('sex') == 'Masculino' else 1)
         weight = st.number_input("Peso (kg)", min_value=1.0, max_value=300.0,
-                                value=st.session_state.patient_data.get('weight', 70.0), step=0.1)
+                                value=st.session_state.patient_data.get('weight', 1.0), step=0.1)
         height = st.number_input("Altura (cm)", min_value=50.0, max_value=250.0,
-                                value=st.session_state.patient_data.get('height', 170.0), step=0.1)
+                                value=st.session_state.patient_data.get('height', 50.0), step=0.1)
         
         st.subheader("História Clínica")
         diabetes = st.checkbox("Diabetes", value=st.session_state.patient_data.get('diabetes', False))
@@ -212,19 +243,19 @@ with tabs[0]:
     with col2:
         st.subheader("Dados Vitais")
         sbp = st.number_input("Pressão Arterial Sistólica (mmHg)", min_value=70, max_value=250,
-                             value=st.session_state.patient_data.get('sbp', 120), step=1)
+                             value=st.session_state.patient_data.get('sbp', 70), step=1)
         
         st.subheader("Lipidograma")
         total_chol = st.number_input("Colesterol Total (mg/dL)", min_value=50, max_value=500,
-                                    value=st.session_state.patient_data.get('total_chol', 200), step=1)
+                                    value=st.session_state.patient_data.get('total_chol', 50), step=1)
         hdl_chol = st.number_input("HDL Colesterol (mg/dL)", min_value=10, max_value=150,
-                                  value=st.session_state.patient_data.get('hdl_chol', 50), step=1)
+                                  value=st.session_state.patient_data.get('hdl_chol', 10), step=1)
         
         st.subheader("Função Renal")
         creatinine = st.number_input("Creatinina sérica (mg/dL)", min_value=0.1, max_value=20.0,
-                                    value=st.session_state.patient_data.get('creatinine', 1.0), step=0.1)
+                                    value=st.session_state.patient_data.get('creatinine', 0.1), step=0.1)
         egfr = st.number_input("eTFG (mL/min/1.73m²)", min_value=5, max_value=150,
-                              value=st.session_state.patient_data.get('egfr', 90), step=1)
+                              value=st.session_state.patient_data.get('egfr', 5), step=1)
         uacr = st.number_input("RACu - Relação Albumina/Creatinina Urinária (mg/g)", 
                               min_value=0.0, max_value=5000.0,
                               value=st.session_state.patient_data.get('uacr', 0.0), step=1.0)
@@ -232,25 +263,25 @@ with tabs[0]:
     with col3:
         st.subheader("Glicemia e Insulina")
         fasting_glucose = st.number_input("Glicemia de jejum (mg/dL)", min_value=30, max_value=600,
-                                         value=st.session_state.patient_data.get('fasting_glucose', 100), step=1)
+                                         value=st.session_state.patient_data.get('fasting_glucose', 30), step=1)
         hba1c = st.number_input("HbA1c (%)", min_value=3.0, max_value=20.0,
-                               value=st.session_state.patient_data.get('hba1c', 5.5), step=0.1)
+                               value=st.session_state.patient_data.get('hba1c', 3.0), step=0.1)
         fasting_insulin = st.number_input("Insulina de jejum (μU/mL)", min_value=0.1, max_value=300.0,
-                                         value=st.session_state.patient_data.get('fasting_insulin', 10.0), step=0.1)
+                                         value=st.session_state.patient_data.get('fasting_insulin', 0.1), step=0.1)
         
         st.subheader("Função Hepática")
         ast = st.number_input("AST (U/L)", min_value=1, max_value=1000,
-                            value=st.session_state.patient_data.get('ast', 30), step=1)
+                            value=st.session_state.patient_data.get('ast', 1), step=1)
         alt = st.number_input("ALT (U/L)", min_value=1, max_value=1000,
-                            value=st.session_state.patient_data.get('alt', 30), step=1)
+                            value=st.session_state.patient_data.get('alt', 1), step=1)
         bilirubin = st.number_input("Bilirrubina total (mg/dL)", min_value=0.1, max_value=50.0,
-                                   value=st.session_state.patient_data.get('bilirubin', 1.0), step=0.1)
+                                   value=st.session_state.patient_data.get('bilirubin', 0.1), step=0.1)
         albumin = st.number_input("Albumina (g/dL)", min_value=1.0, max_value=6.0,
-                                 value=st.session_state.patient_data.get('albumin', 4.0), step=0.1)
+                                 value=st.session_state.patient_data.get('albumin', 1.0), step=0.1)
         inr = st.number_input("INR", min_value=0.8, max_value=10.0,
-                            value=st.session_state.patient_data.get('inr', 1.0), step=0.1)
+                            value=st.session_state.patient_data.get('inr', 0.8), step=0.1)
         platelets = st.number_input("Plaquetas (×10⁹/L)", min_value=1, max_value=1000,
-                                   value=st.session_state.patient_data.get('platelets', 200), step=1)
+                                   value=st.session_state.patient_data.get('platelets', 1), step=1)
     
     # Automatically save data to session state as user inputs
     st.session_state.patient_data = {
@@ -297,104 +328,186 @@ with tabs[1]:
     else:
         pd = st.session_state.patient_data
         
-        # Helper function to render calculator cards
-        def render_calc_card(icon, title, subtitle, calc_func):
-            """Render a calculator card with automatic calculation"""
-            st.markdown(f"""
-                <div class="calculator-card">
-                    <div class="calc-header">
-                        <div class="calc-icon">{icon}</div>
-                        <div>
-                            <div class="calc-title">{title}</div>
-                            <div class="calc-subtitle">{subtitle}</div>
-                        </div>
-                    </div>
-                </div>
-            """, unsafe_allow_html=True)
-            
-            try:
-                result = calc_func()
-                return result
-            except Exception as e:
-                st.error(f"Erro: {str(e)}")
-                return None
+        # Helper function to check if required data is valid/realistic
+        def has_valid_data(params_needed):
+            """Check if the patient data has realistic values for required parameters"""
+            for param, min_val in params_needed.items():
+                val = pd.get(param, 0)
+                if isinstance(val, bool):
+                    continue  # Booleans are always valid
+                if val <= min_val:
+                    return False, param
+            return True, None
+        
+        # Helper function to get missing parameters message
+        def get_missing_params_msg(params_needed):
+            """Generate message for missing parameters"""
+            missing = []
+            param_labels = {
+                'age': 'Idade', 'weight': 'Peso', 'height': 'Altura',
+                'sbp': 'Pressão Arterial', 'total_chol': 'Colesterol Total',
+                'hdl_chol': 'HDL Colesterol', 'creatinine': 'Creatinina',
+                'egfr': 'eTFG', 'fasting_glucose': 'Glicemia de jejum',
+                'fasting_insulin': 'Insulina de jejum', 'ast': 'AST',
+                'alt': 'ALT', 'platelets': 'Plaquetas', 'bilirubin': 'Bilirrubina',
+                'albumin': 'Albumina', 'inr': 'INR', 'hba1c': 'HbA1c'
+            }
+            for param, min_val in params_needed.items():
+                val = pd.get(param, 0)
+                if isinstance(val, bool):
+                    continue
+                if val <= min_val:
+                    missing.append(param_labels.get(param, param))
+            return missing
+        
+        # Check calculator availability
+        calc_availability = {
+            'IMC': has_valid_data({'weight': 1.0, 'height': 50.0})[0],
+            'HOMA-IR': has_valid_data({'fasting_glucose': 30, 'fasting_insulin': 0.1})[0],
+            'HOMA-Beta': has_valid_data({'fasting_glucose': 30, 'fasting_insulin': 0.1})[0],
+            'FIB-4': has_valid_data({'age': 1, 'ast': 1, 'alt': 1, 'platelets': 1})[0],
+            'MELD': has_valid_data({'creatinine': 0.1, 'bilirubin': 0.1, 'inr': 0.8})[0],
+            'Child-Pugh': has_valid_data({'bilirubin': 0.1, 'albumin': 1.0, 'inr': 0.8})[0],
+            'eTFG': has_valid_data({'creatinine': 0.1, 'age': 1})[0],
+            'Kt/V': has_valid_data({'weight': 1.0})[0],
+            'PREVENT': has_valid_data({'age': 1, 'sbp': 70, 'total_chol': 50, 'hdl_chol': 10, 'egfr': 5})[0]
+        }
+        
+        # Display availability summary
+        ready_count = sum(calc_availability.values())
+        total_count = len(calc_availability)
+        
+        st.markdown(f"""
+        <div class="info-box">
+        <strong>Status das Calculadoras:</strong> {ready_count} de {total_count} calculadoras podem ser executadas com os dados atuais<br>
+        ✅ <strong>Prontas:</strong> {', '.join([k for k, v in calc_availability.items() if v])}<br>
+        ⚠️ <strong>Faltam dados:</strong> {', '.join([k for k, v in calc_availability.items() if not v])}
+        </div>
+        """, unsafe_allow_html=True)
+        
+        st.markdown("---")
         
         # ===== ENDOCRINOLOGY SECTION =====
         st.markdown("### 🩺 Endocrinologia")
         col1, col2, col3 = st.columns(3)
         
         with col1:
-            st.markdown("""
+            # Check availability
+            is_available = calc_availability.get('IMC', False)
+            status_badge = '<span class="status-badge status-ready">✅ Pronto</span>' if is_available else '<span class="status-badge status-missing">⚠️ Falta dados</span>'
+            
+            st.markdown(f"""
                 <div class="calculator-card">
                     <div class="calc-header">
                         <div class="calc-icon">📊</div>
                         <div>
-                            <div class="calc-title">IMC</div>
+                            <div class="calc-title">IMC {status_badge}</div>
                             <div class="calc-subtitle">Índice de Massa Corporal</div>
                         </div>
                     </div>
                 </div>
             """, unsafe_allow_html=True)
             
-            try:
-                calculator = BMICalculator()
-                result = calculator.calculate(weight=pd['weight'], height=pd['height'])
-                col_a, col_b = st.columns(2)
-                with col_a:
-                    st.metric("IMC", result['bmi'])
-                with col_b:
-                    st.metric("Classificação", result['classification'])
-                st.info(f"**Risco:** {result['risk']}")
-            except Exception as e:
-                st.error(f"Erro: {str(e)}")
+            # Check if data is valid
+            is_valid, missing_param = has_valid_data({'weight': 1.0, 'height': 50.0})
+            
+            if not is_valid:
+                missing = get_missing_params_msg({'weight': 1.0, 'height': 50.0})
+                st.warning(f"⚠️ **Dados faltantes:** {', '.join(missing)}")
+            else:
+                try:
+                    calculator = BMICalculator()
+                    result = calculator.calculate(weight=pd['weight'], height=pd['height'])
+                    col_a, col_b = st.columns(2)
+                    with col_a:
+                        st.metric("IMC", result['bmi'])
+                    with col_b:
+                        st.metric("Classificação", result['classification'])
+                    st.markdown(f"""
+                        <div class="classification-box">
+                            <strong>Risco:</strong> {result['risk']}
+                        </div>
+                    """, unsafe_allow_html=True)
+                except Exception as e:
+                    st.error(f"Erro: {str(e)}")
         
         with col2:
-            st.markdown("""
+            # Check availability
+            is_available = calc_availability.get('HOMA-IR', False)
+            status_badge = '<span class="status-badge status-ready">✅ Pronto</span>' if is_available else '<span class="status-badge status-missing">⚠️ Falta dados</span>'
+            
+            st.markdown(f"""
                 <div class="calculator-card">
                     <div class="calc-header">
                         <div class="calc-icon">🔬</div>
                         <div>
-                            <div class="calc-title">HOMA-IR</div>
+                            <div class="calc-title">HOMA-IR {status_badge}</div>
                             <div class="calc-subtitle">Resistência Insulínica</div>
                         </div>
                     </div>
                 </div>
             """, unsafe_allow_html=True)
             
-            try:
-                calculator = HOMAIRCalculator()
-                result = calculator.calculate(
-                    fasting_glucose=pd['fasting_glucose'],
-                    fasting_insulin=pd['fasting_insulin']
-                )
-                st.metric("HOMA-IR", result['homa_ir'])
-                st.info(f"**{result['interpretation']}**")
-            except Exception as e:
-                st.error(f"Erro: {str(e)}")
+            # Check if data is valid
+            is_valid, missing_param = has_valid_data({'fasting_glucose': 30, 'fasting_insulin': 0.1})
+            
+            if not is_valid:
+                missing = get_missing_params_msg({'fasting_glucose': 30, 'fasting_insulin': 0.1})
+                st.warning(f"⚠️ **Dados faltantes:** {', '.join(missing)}")
+            else:
+                try:
+                    calculator = HOMAIRCalculator()
+                    result = calculator.calculate(
+                        fasting_glucose=pd['fasting_glucose'],
+                        fasting_insulin=pd['fasting_insulin']
+                    )
+                    st.metric("HOMA-IR", result['homa_ir'])
+                    st.markdown(f"""
+                        <div class="classification-box">
+                            {result['interpretation']}
+                        </div>
+                    """, unsafe_allow_html=True)
+                except Exception as e:
+                    st.error(f"Erro: {str(e)}")
         
         with col3:
-            st.markdown("""
+            # Check availability
+            is_available = calc_availability.get('HOMA-Beta', False)
+            status_badge = '<span class="status-badge status-ready">✅ Pronto</span>' if is_available else '<span class="status-badge status-missing">⚠️ Falta dados</span>'
+            
+            st.markdown(f"""
                 <div class="calculator-card">
                     <div class="calc-header">
                         <div class="calc-icon">🧬</div>
                         <div>
-                            <div class="calc-title">HOMA-Beta</div>
+                            <div class="calc-title">HOMA-Beta {status_badge}</div>
                             <div class="calc-subtitle">Função Beta Células</div>
                         </div>
                     </div>
                 </div>
             """, unsafe_allow_html=True)
             
-            try:
-                calculator = HOMABetaCalculator()
-                result = calculator.calculate(
-                    fasting_glucose=pd['fasting_glucose'],
-                    fasting_insulin=pd['fasting_insulin']
-                )
-                st.metric("HOMA-Beta", f"{result['homa_beta']}%")
-                st.info(f"**{result['interpretation']}**")
-            except Exception as e:
-                st.error(f"Erro: {str(e)}")
+            # Check if data is valid
+            is_valid, missing_param = has_valid_data({'fasting_glucose': 30, 'fasting_insulin': 0.1})
+            
+            if not is_valid:
+                missing = get_missing_params_msg({'fasting_glucose': 30, 'fasting_insulin': 0.1})
+                st.warning(f"⚠️ **Dados faltantes:** {', '.join(missing)}")
+            else:
+                try:
+                    calculator = HOMABetaCalculator()
+                    result = calculator.calculate(
+                        fasting_glucose=pd['fasting_glucose'],
+                        fasting_insulin=pd['fasting_insulin']
+                    )
+                    st.metric("HOMA-Beta", f"{result['homa_beta']}%")
+                    st.markdown(f"""
+                        <div class="classification-box">
+                            {result['interpretation']}
+                        </div>
+                    """, unsafe_allow_html=True)
+                except Exception as e:
+                    st.error(f"Erro: {str(e)}")
         
         # ===== GASTROENTEROLOGY SECTION =====
         st.markdown("---")
@@ -402,69 +515,103 @@ with tabs[1]:
         col1, col2, col3 = st.columns(3)
         
         with col1:
-            st.markdown("""
+            # Check availability
+            is_available = calc_availability.get('FIB-4', False)
+            status_badge = '<span class="status-badge status-ready">✅ Pronto</span>' if is_available else '<span class="status-badge status-missing">⚠️ Falta dados</span>'
+            
+            st.markdown(f"""
                 <div class="calculator-card">
                     <div class="calc-header">
                         <div class="calc-icon">🔍</div>
                         <div>
-                            <div class="calc-title">FIB-4</div>
+                            <div class="calc-title">FIB-4 {status_badge}</div>
                             <div class="calc-subtitle">Fibrose Hepática</div>
                         </div>
                     </div>
                 </div>
             """, unsafe_allow_html=True)
             
-            try:
-                calculator = FIB4Calculator()
-                result = calculator.calculate(
-                    age=pd['age'],
-                    ast=pd['ast'],
-                    alt=pd['alt'],
-                    platelets=pd['platelets']
-                )
-                col_a, col_b = st.columns(2)
-                with col_a:
-                    st.metric("Score FIB-4", result['score'])
-                with col_b:
-                    st.metric("Risco", result['risk'])
-                st.info(f"**{result['interpretation']}**")
-            except Exception as e:
-                st.error(f"Erro: {str(e)}")
+            # Check if data is valid
+            is_valid, missing_param = has_valid_data({'age': 1, 'ast': 1, 'alt': 1, 'platelets': 1})
+            
+            if not is_valid:
+                missing = get_missing_params_msg({'age': 1, 'ast': 1, 'alt': 1, 'platelets': 1})
+                st.warning(f"⚠️ **Dados faltantes:** {', '.join(missing)}")
+            else:
+                try:
+                    calculator = FIB4Calculator()
+                    result = calculator.calculate(
+                        age=pd['age'],
+                        ast=pd['ast'],
+                        alt=pd['alt'],
+                        platelets=pd['platelets']
+                    )
+                    col_a, col_b = st.columns(2)
+                    with col_a:
+                        st.metric("Score FIB-4", result['score'])
+                    with col_b:
+                        st.metric("Risco", result['risk'])
+                    st.markdown(f"""
+                        <div class="classification-box">
+                            {result['interpretation']}
+                        </div>
+                    """, unsafe_allow_html=True)
+                except Exception as e:
+                    st.error(f"Erro: {str(e)}")
         
         with col2:
-            st.markdown("""
+            # Check availability
+            is_available = calc_availability.get('MELD', False)
+            status_badge = '<span class="status-badge status-ready">✅ Pronto</span>' if is_available else '<span class="status-badge status-missing">⚠️ Falta dados</span>'
+            
+            st.markdown(f"""
                 <div class="calculator-card">
                     <div class="calc-header">
                         <div class="calc-icon">⚕️</div>
                         <div>
-                            <div class="calc-title">MELD</div>
+                            <div class="calc-title">MELD {status_badge}</div>
                             <div class="calc-subtitle">Gravidade Hepática</div>
                         </div>
                     </div>
                 </div>
             """, unsafe_allow_html=True)
             
-            try:
-                calculator = MELDCalculator()
-                result = calculator.calculate(
-                    creatinine=pd['creatinine'],
-                    bilirubin=pd['bilirubin'],
-                    inr=pd['inr'],
-                    dialysis=pd['dialysis']
-                )
-                st.metric("Score MELD", result['score'])
-                st.info(f"**{result['interpretation']}**")
-                st.warning(f"**{result['mortality']}**")
-            except Exception as e:
-                st.error(f"Erro: {str(e)}")
+            # Check if data is valid
+            is_valid, missing_param = has_valid_data({'creatinine': 0.1, 'bilirubin': 0.1, 'inr': 0.8})
+            
+            if not is_valid:
+                missing = get_missing_params_msg({'creatinine': 0.1, 'bilirubin': 0.1, 'inr': 0.8})
+                st.warning(f"⚠️ **Dados faltantes:** {', '.join(missing)}")
+            else:
+                try:
+                    calculator = MELDCalculator()
+                    result = calculator.calculate(
+                        creatinine=pd['creatinine'],
+                        bilirubin=pd['bilirubin'],
+                        inr=pd['inr'],
+                        dialysis=pd['dialysis']
+                    )
+                    st.metric("Score MELD", result['score'])
+                    st.markdown(f"""
+                        <div class="classification-box">
+                            {result['interpretation']}<br>
+                            <strong>Mortalidade:</strong> {result['mortality']}
+                        </div>
+                    """, unsafe_allow_html=True)
+                except Exception as e:
+                    st.error(f"Erro: {str(e)}")
         
         with col3:
-            st.markdown("""
+            # Check availability
+            is_available = calc_availability.get('Child-Pugh', False)
+            status_badge = '<span class="status-badge status-ready">✅ Pronto</span>' if is_available else '<span class="status-badge status-missing">⚠️ Falta dados</span>'
+            
+            st.markdown(f"""
                 <div class="calculator-card">
                     <div class="calc-header">
                         <div class="calc-icon">🏥</div>
                         <div>
-                            <div class="calc-title">Child-Pugh</div>
+                            <div class="calc-title">Child-Pugh {status_badge}</div>
                             <div class="calc-subtitle">Classificação de Cirrose</div>
                         </div>
                     </div>
@@ -475,26 +622,37 @@ with tabs[1]:
             ascites = st.selectbox("Ascite", ["Ausente", "Leve", "Moderada/Grave"], key="cp_ascites")
             encephalopathy = st.selectbox("Encefalopatia", ["Ausente", "Grau 1-2", "Grau 3-4"], key="cp_enceph")
             
-            try:
-                ascites_map = {"Ausente": "none", "Leve": "mild", "Moderada/Grave": "moderate_severe"}
-                enceph_map = {"Ausente": "none", "Grau 1-2": "grade_1_2", "Grau 3-4": "grade_3_4"}
-                
-                calculator = ChildPughCalculator()
-                result = calculator.calculate(
-                    bilirubin=pd['bilirubin'],
-                    albumin=pd['albumin'],
-                    inr=pd['inr'],
-                    ascites=ascites_map[ascites],
-                    encephalopathy=enceph_map[encephalopathy]
-                )
-                col_a, col_b = st.columns(2)
-                with col_a:
-                    st.metric("Score", result['score'])
-                with col_b:
-                    st.metric("Classe", result['class'])
-                st.info(f"**{result['interpretation']}**")
-            except Exception as e:
-                st.error(f"Erro: {str(e)}")
+            # Check if data is valid
+            is_valid, missing_param = has_valid_data({'bilirubin': 0.1, 'albumin': 1.0, 'inr': 0.8})
+            
+            if not is_valid:
+                missing = get_missing_params_msg({'bilirubin': 0.1, 'albumin': 1.0, 'inr': 0.8})
+                st.warning(f"⚠️ **Dados faltantes:** {', '.join(missing)}")
+            else:
+                try:
+                    ascites_map = {"Ausente": "none", "Leve": "mild", "Moderada/Grave": "moderate_severe"}
+                    enceph_map = {"Ausente": "none", "Grau 1-2": "grade_1_2", "Grau 3-4": "grade_3_4"}
+                    
+                    calculator = ChildPughCalculator()
+                    result = calculator.calculate(
+                        bilirubin=pd['bilirubin'],
+                        albumin=pd['albumin'],
+                        inr=pd['inr'],
+                        ascites=ascites_map[ascites],
+                        encephalopathy=enceph_map[encephalopathy]
+                    )
+                    col_a, col_b = st.columns(2)
+                    with col_a:
+                        st.metric("Score", result['score'])
+                    with col_b:
+                        st.metric("Classe", result['class'])
+                    st.markdown(f"""
+                        <div class="classification-box">
+                            {result['interpretation']}
+                        </div>
+                    """, unsafe_allow_html=True)
+                except Exception as e:
+                    st.error(f"Erro: {str(e)}")
         
         # ===== NEPHROLOGY SECTION =====
         st.markdown("---")
@@ -502,42 +660,61 @@ with tabs[1]:
         col1, col2 = st.columns(2)
         
         with col1:
-            st.markdown("""
+            # Check availability
+            is_available = calc_availability.get('eTFG', False)
+            status_badge = '<span class="status-badge status-ready">✅ Pronto</span>' if is_available else '<span class="status-badge status-missing">⚠️ Falta dados</span>'
+            
+            st.markdown(f"""
                 <div class="calculator-card">
                     <div class="calc-header">
                         <div class="calc-icon">🫘</div>
                         <div>
-                            <div class="calc-title">eTFG</div>
+                            <div class="calc-title">eTFG {status_badge}</div>
                             <div class="calc-subtitle">Taxa de Filtração Glomerular</div>
                         </div>
                     </div>
                 </div>
             """, unsafe_allow_html=True)
             
-            try:
-                sex_code = 'M' if pd['sex'] == "Masculino" else 'F'
-                calculator = eGFRCalculator()
-                result = calculator.calculate(
-                    creatinine=pd['creatinine'],
-                    age=pd['age'],
-                    sex=sex_code
-                )
-                col_a, col_b = st.columns(2)
-                with col_a:
-                    st.metric("eTFG", f"{result['egfr']} mL/min/1.73m²")
-                with col_b:
-                    st.metric("Estágio DRC", result['stage'])
-                st.info(f"**{result['description']}**")
-            except Exception as e:
-                st.error(f"Erro: {str(e)}")
+            # Check if data is valid
+            is_valid, missing_param = has_valid_data({'creatinine': 0.1, 'age': 1})
+            
+            if not is_valid:
+                missing = get_missing_params_msg({'creatinine': 0.1, 'age': 1})
+                st.warning(f"⚠️ **Dados faltantes:** {', '.join(missing)}")
+            else:
+                try:
+                    sex_code = 'M' if pd['sex'] == "Masculino" else 'F'
+                    calculator = eGFRCalculator()
+                    result = calculator.calculate(
+                        creatinine=pd['creatinine'],
+                        age=pd['age'],
+                        sex=sex_code
+                    )
+                    col_a, col_b = st.columns(2)
+                    with col_a:
+                        st.metric("eTFG", f"{result['egfr']} mL/min/1.73m²")
+                    with col_b:
+                        st.metric("Estágio DRC", result['stage'])
+                    st.markdown(f"""
+                        <div class="classification-box">
+                            {result['description']}
+                        </div>
+                    """, unsafe_allow_html=True)
+                except Exception as e:
+                    st.error(f"Erro: {str(e)}")
         
         with col2:
-            st.markdown("""
+            # Check availability
+            is_available = calc_availability.get('Kt/V', False)
+            status_badge = '<span class="status-badge status-ready">✅ Pronto</span>' if is_available else '<span class="status-badge status-missing">⚠️ Falta dados</span>'
+            
+            st.markdown(f"""
                 <div class="calculator-card">
                     <div class="calc-header">
                         <div class="calc-icon">💉</div>
                         <div>
-                            <div class="calc-title">Kt/V</div>
+                            <div class="calc-title">Kt/V {status_badge}</div>
                             <div class="calc-subtitle">Adequação da Diálise</div>
                         </div>
                     </div>
@@ -553,90 +730,115 @@ with tabs[1]:
                 dialysis_time = st.number_input("Tempo de diálise (horas)", min_value=0.5, max_value=10.0, value=4.0, step=0.5, key="ktv_time")
                 ultrafiltration = st.number_input("Ultrafiltração (L)", min_value=0.0, max_value=10.0, value=2.0, step=0.1, key="ktv_uf")
             
-            try:
-                calculator = KtVCalculator()
-                result = calculator.calculate(
-                    pre_bun=pre_bun,
-                    post_bun=post_bun,
-                    dialysis_time=dialysis_time,
-                    ultrafiltration=ultrafiltration,
-                    post_weight=pd['weight']
-                )
-                col_a, col_b = st.columns(2)
-                with col_a:
-                    st.metric("Kt/V", result['ktv'])
-                with col_b:
-                    st.metric("Adequação", result['adequacy'])
-                st.info(f"**{result['recommendation']}**")
-            except Exception as e:
-                st.error(f"Erro: {str(e)}")
+            # Check if weight is valid
+            is_valid, missing_param = has_valid_data({'weight': 1.0})
+            
+            if not is_valid:
+                st.warning(f"⚠️ **Dados faltantes:** Peso")
+            else:
+                try:
+                    calculator = KtVCalculator()
+                    result = calculator.calculate(
+                        pre_bun=pre_bun,
+                        post_bun=post_bun,
+                        dialysis_time=dialysis_time,
+                        ultrafiltration=ultrafiltration,
+                        post_weight=pd['weight']
+                    )
+                    col_a, col_b = st.columns(2)
+                    with col_a:
+                        st.metric("Kt/V", result['ktv'])
+                    with col_b:
+                        st.metric("Adequação", result['adequacy'])
+                    st.markdown(f"""
+                        <div class="classification-box">
+                            <strong>Recomendação:</strong> {result['recommendation']}
+                        </div>
+                    """, unsafe_allow_html=True)
+                except Exception as e:
+                    st.error(f"Erro: {str(e)}")
         
         # ===== CARDIOLOGY SECTION =====
         st.markdown("---")
         st.markdown("### 🫀 Cardiologia")
         
-        st.markdown("""
+        # Check availability
+        is_available = calc_availability.get('PREVENT', False)
+        status_badge = '<span class="status-badge status-ready">✅ Pronto</span>' if is_available else '<span class="status-badge status-missing">⚠️ Falta dados</span>'
+        
+        st.markdown(f"""
             <div class="calculator-card">
                 <div class="calc-header">
                     <div class="calc-icon">❤️</div>
                     <div>
-                        <div class="calc-title">PREVENT</div>
+                        <div class="calc-title">PREVENT {status_badge}</div>
                         <div class="calc-subtitle">Risco Cardiovascular (AHA)</div>
                     </div>
                 </div>
             </div>
         """, unsafe_allow_html=True)
         
-        try:
-            sex_code = 'M' if pd['sex'] == "Masculino" else 'F'
-            calculator = PREVENTCalculator()
-            results = calculator.calculate_risk_score(
-                age=pd['age'],
-                sex=sex_code,
-                race='other',
-                total_cholesterol=pd['total_chol'],
-                hdl_cholesterol=pd['hdl_chol'],
-                sbp=pd['sbp'],
-                on_bp_meds=pd['on_bp_meds'],
-                diabetes=pd['diabetes'],
-                smoker=pd['smoker'],
-                egfr=pd['egfr'],
-                uacr=pd.get('uacr') if pd.get('uacr', 0) > 0 else None,
-                hba1c=pd.get('hba1c') if pd.get('hba1c', 0) > 0 else None
-            )
-            
-            # Display overall risk category
-            risk_class_map = {
-                'Baixo': 'risk-low',
-                'Limítrofe': 'risk-borderline',
-                'Intermediário': 'risk-intermediate',
-                'Alto': 'risk-high'
-            }
-            st.markdown(f"""
-                <div class="risk-box {risk_class_map[results['risk_category']]}">
-                    Categoria de Risco Geral: {results['risk_category'].upper()}
-                </div>
-            """, unsafe_allow_html=True)
-            
-            col1, col2, col3 = st.columns(3)
-            
-            with col1:
-                st.markdown("**📊 DCV Total**")
-                st.metric("10 anos", f"{results['total_cvd_10yr']}%")
-                st.metric("30 anos", f"{results['total_cvd_30yr']}%")
-            
-            with col2:
-                st.markdown("**🩺 DCVA (Aterosclerose)**")
-                st.metric("10 anos", f"{results['ascvd_10yr']}%")
-                st.metric("30 anos", f"{results['ascvd_30yr']}%")
-            
-            with col3:
-                st.markdown("**💔 Insuficiência Cardíaca**")
-                st.metric("10 anos", f"{results['hf_10yr']}%")
-                st.metric("30 anos", f"{results['hf_30yr']}%")
-            
-        except Exception as e:
-            st.error(f"Erro ao calcular PREVENT: {str(e)}")
+        # Check if data is valid for PREVENT
+        is_valid, missing_param = has_valid_data({
+            'age': 1, 'sbp': 70, 'total_chol': 50, 'hdl_chol': 10, 'egfr': 5
+        })
+        
+        if not is_valid:
+            missing = get_missing_params_msg({
+                'age': 1, 'sbp': 70, 'total_chol': 50, 'hdl_chol': 10, 'egfr': 5
+            })
+            st.warning(f"⚠️ **Dados faltantes:** {', '.join(missing)}")
+        else:
+            try:
+                sex_code = 'M' if pd['sex'] == "Masculino" else 'F'
+                calculator = PREVENTCalculator()
+                results = calculator.calculate_risk_score(
+                    age=pd['age'],
+                    sex=sex_code,
+                    race='other',
+                    total_cholesterol=pd['total_chol'],
+                    hdl_cholesterol=pd['hdl_chol'],
+                    sbp=pd['sbp'],
+                    on_bp_meds=pd['on_bp_meds'],
+                    diabetes=pd['diabetes'],
+                    smoker=pd['smoker'],
+                    egfr=pd['egfr'],
+                    uacr=pd.get('uacr') if pd.get('uacr', 0) > 0 else None,
+                    hba1c=pd.get('hba1c') if pd.get('hba1c', 0) > 0 else None
+                )
+                
+                # Display overall risk category
+                risk_class_map = {
+                    'Baixo': 'risk-low',
+                    'Limítrofe': 'risk-borderline',
+                    'Intermediário': 'risk-intermediate',
+                    'Alto': 'risk-high'
+                }
+                st.markdown(f"""
+                    <div class="risk-box {risk_class_map[results['risk_category']]}">
+                        Categoria de Risco Geral: {results['risk_category'].upper()}
+                    </div>
+                """, unsafe_allow_html=True)
+                
+                col1, col2, col3 = st.columns(3)
+                
+                with col1:
+                    st.markdown("**📊 DCV Total**")
+                    st.metric("10 anos", f"{results['total_cvd_10yr']}%")
+                    st.metric("30 anos", f"{results['total_cvd_30yr']}%")
+                
+                with col2:
+                    st.markdown("**🩺 DCVA (Aterosclerose)**")
+                    st.metric("10 anos", f"{results['ascvd_10yr']}%")
+                    st.metric("30 anos", f"{results['ascvd_30yr']}%")
+                
+                with col3:
+                    st.markdown("**💔 Insuficiência Cardíaca**")
+                    st.metric("10 anos", f"{results['hf_10yr']}%")
+                    st.metric("30 anos", f"{results['hf_30yr']}%")
+                
+            except Exception as e:
+                st.error(f"Erro ao calcular PREVENT: {str(e)}")
 
 
 # ========== TAB 3: CARDIOLOGY ==========
