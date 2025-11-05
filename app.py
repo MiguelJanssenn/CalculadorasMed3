@@ -221,6 +221,9 @@ with tabs[0]:
     
     with col1:
         st.subheader("Dados Demográficos")
+        # Note: Default values are set to minimum values (not realistic patient values)
+        # This ensures the form starts empty, requiring conscious input from the user.
+        # This addresses requirement #3: page should load without pre-filled data.
         age = st.number_input("Idade (anos)", min_value=1, max_value=120, 
                              value=st.session_state.patient_data.get('age', 1), step=1)
         sex = st.selectbox("Sexo", ["Masculino", "Feminino"],
@@ -356,28 +359,6 @@ with tabs[1]:
                 if val <= min_val:
                     missing.append(param_labels.get(param, param))
             return missing
-        
-        # Helper function to render calculator cards
-        def render_calc_card(icon, title, subtitle, calc_func):
-            """Render a calculator card with automatic calculation"""
-            st.markdown(f"""
-                <div class="calculator-card">
-                    <div class="calc-header">
-                        <div class="calc-icon">{icon}</div>
-                        <div>
-                            <div class="calc-title">{title}</div>
-                            <div class="calc-subtitle">{subtitle}</div>
-                        </div>
-                    </div>
-                </div>
-            """, unsafe_allow_html=True)
-            
-            try:
-                result = calc_func()
-                return result
-            except Exception as e:
-                st.error(f"Erro: {str(e)}")
-                return None
         
         # Check calculator availability
         calc_availability = {
