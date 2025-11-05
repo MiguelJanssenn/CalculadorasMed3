@@ -12,7 +12,7 @@ of Total Cardiovascular Disease Incorporating Cardiovascular-Kidney-Metabolic He
 Circulation. 2023. DOI: 10.1161/CIRCULATIONAHA.123.067626
 """
 import numpy as np
-
+import pandas as pd  # <-- CORREÇÃO: Adicionando a importação que faltava
 
 class PREVENTCalculator:
     """
@@ -138,6 +138,7 @@ class PREVENTCalculator:
         }
     
     def _categorize_risk(self, risk_pct):
+        if np.isnan(risk_pct): return 'Indisponível'
         if risk_pct < 5: return 'Baixo'
         elif risk_pct < 7.5: return 'Limítrofe'
         elif risk_pct < 20: return 'Intermediário'
